@@ -1,0 +1,7 @@
+name = "MultiFlows"
+uuid = "5a994a9f-9646-4742-b13c-4718af9d505e"
+authors = ["Alexandre Schulz <schulz@lipn.univ-paris13.fr>"]
+version = "0.1.0"
+
+[deps]
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
