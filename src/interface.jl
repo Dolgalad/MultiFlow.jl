@@ -25,6 +25,12 @@ struct Demand{T,U} <: AbstractDemand{T, U}
     demand::U
 end
 
+"""
+    BadDemandError{M}(m)
+
+`Exception` thrown when a MultiFlow instance contains a demand with bad source or demand. 
+"""
+struct BadDemandError <: Exception end
 
 """
     MultiFlow
@@ -36,3 +42,9 @@ struct MultiFlow{T, U}  <: AbstractMultiFlow{T, U}
     demands::Vector{D} where {D<:AbstractDemand{T,U}}
 end
 
+"""
+    nk(m::AbstractMultiFlow)
+
+Returns the number of demands
+"""
+nk(mf::AbstractMultiFlow) = length(mf.demands)
