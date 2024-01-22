@@ -37,9 +37,11 @@ struct BadDemandError <: Exception end
 
 Concrete type representing a multi flow problem.
 """
-struct MultiFlow{T, U}  <: AbstractMultiFlow{T, U}
+struct MultiFlow{T, C, E, U}  <: AbstractMultiFlow{T, U}
     graph::AbstractGraph{T}
     demands::Vector{D} where {D<:AbstractDemand{T,U}}
+    costs::Vector{C}
+    capacities::Vector{E}
 end
 
 """
@@ -48,3 +50,30 @@ end
 Returns the number of demands
 """
 nk(mf::AbstractMultiFlow) = length(mf.demands)
+
+"""
+Get list of demand that originate at node n
+"""
+function demands_originating_at(mf, n)
+    ks = []
+    for k in 1:nk(mf)
+        if mf.demands[k].src == n
+            push!(ks, k)
+        end
+    end
+    return ks
+end
+
+"""
+Get list of demand that terminate at node n
+"""
+function demands_terminating_at(mf, n)
+    ks = []
+    for k in 1:nk(mf)
+        if mf.demands[k].dst == n
+            push!(ks, k)
+        end
+    end
+    return ks
+end
+

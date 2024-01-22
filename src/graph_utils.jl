@@ -1,4 +1,3 @@
-#using Graphs
 """
     arc_index_matrix(g::AbstractGraph{T})
 Get the graphs arc index matrix M.
