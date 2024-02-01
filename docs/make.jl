@@ -26,17 +26,18 @@ pages = [
 
 #makedocs(sitename="MultiFlows.jl documentation")
 makedocs(
-         sitename="MultiFlows.jl", 
-         format = Documenter.HTML(prettyurls = false)
-        )
-
-deploydocs(
-           repo = "github.com/Dolgalad/MultiFlows.jl.git",
-           devbranch = "docs",
+           sitename="MultiFlows.jl", 
+           format = Documenter.HTML(prettyurls = false),
            pages=[
                section_name => [
                    get_title(joinpath(normpath(@__FILE__, ".."), "src", file)) => file for
                    file in section_files
                ] for (section_name, section_files) in pages_files
            ],
+
+        )
+
+deploydocs(
+           repo = "github.com/Dolgalad/MultiFlows.jl.git",
+           devbranch = "docs",
           )
