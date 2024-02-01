@@ -1,2 +1,2 @@
-# MultiFlow.jl
-Multi Flow problem package for Julia
+# MultiFlows.jl
+[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://dolgalad.github.io/MultiFlows.jl/dev/)
