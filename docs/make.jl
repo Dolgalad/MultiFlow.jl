@@ -1,9 +1,42 @@
 using Documenter, MultiFlows
 
+
+function get_title(markdown_file_path::AbstractString)
+    first_line = open(markdown_file_path) do io
+        readline(io)
+    end
+    return String(chop(first_line; head=2, tail=0))
+end
+
+pages_files = [
+    "First steps" => [
+        "index.md",
+    ],
+    "Core API" => [
+        "core_functions/core.md",
+    ],
+]
+
+pages = [
+    section_name => [
+        get_title(joinpath(normpath(@__FILE__, ".."), "src", file)) => file for
+        file in section_files
+    ] for (section_name, section_files) in pages_files
+]
+
 #makedocs(sitename="MultiFlows.jl documentation")
-makedocs(sitename="MultiFlows.jl documentation", format = Documenter.HTML(prettyurls = false))
+makedocs(
+         sitename="MultiFlows.jl", 
+         format = Documenter.HTML(prettyurls = false)
+        )
 
 deploydocs(
            repo = "github.com/Dolgalad/MultiFlows.jl.git",
            devbranch = "docs",
+           pages=[
+               section_name => [
+                   get_title(joinpath(normpath(@__FILE__, ".."), "src", file)) => file for
+                   file in section_files
+               ] for (section_name, section_files) in pages_files
+           ],
           )
