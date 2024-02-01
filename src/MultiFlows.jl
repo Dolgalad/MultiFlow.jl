@@ -28,6 +28,12 @@ include("interface.jl")
 nv(mf::AbstractMultiFlow) = nv(mf.graph)
 ne(mf::AbstractMultiFlow) = ne(mf.graph)
 
+"""
+    MultiFlows
+
+MultiFlows package documentation.
+"""
+MultiFlows
 include("plotting.jl")
 include("paths.jl")
 include("graph_utils.jl")
