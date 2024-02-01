@@ -5,5 +5,5 @@ makedocs(sitename="MultiFlows.jl documentation", format = Documenter.HTML(pretty
 
 deploydocs(
            repo = "github.com/Dolgalad/MultiFlows.jl.git",
-           devbranch = "main",
+           devbranch = "docs",
           )
