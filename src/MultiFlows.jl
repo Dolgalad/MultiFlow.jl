@@ -31,7 +31,7 @@ ne(mf::AbstractMultiFlow) = ne(mf.graph)
 include("plotting.jl")
 include("paths.jl")
 include("graph_utils.jl")
-include("mcf.jl")
+include("core.jl")
 
 
 end # module MultiFlows
