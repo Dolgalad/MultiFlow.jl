@@ -1,18 +1,27 @@
 module MultiFlows
 
-import Graphs: AbstractGraph, nv, ne, edges
-using GraphPlot
-using Compose
-using Measures
-
-import Cairo, Fontconfig
+using DataFrames
+using CSV
+using Graphs
+import Graphs: nv, ne, edges
+using SimpleWeightedGraphs
+using SparseArrays
 
 export 
-    AbstractDemand,
-    AbstractMultiFlow,
     Demand,
-    MultiFlow,
+    FeatureDiGraph,
+    MCF,
     nk,
+    nv,
+    ne,
+    graph,
+    weight_matrix,
+    cost_matrix,
+    capacity_matrix,
+    scale,
+    normalize,
+    # loading MCFs
+    load,
     # plotting
     plot,
     # paths
@@ -23,21 +32,16 @@ export
     # graph utilities
     arc_index_matrix
 
-include("interface.jl")
-
-nv(mf::AbstractMultiFlow) = nv(mf.graph)
-ne(mf::AbstractMultiFlow) = ne(mf.graph)
-
 """
     MultiFlows
 
 MultiFlows package documentation.
 """
 MultiFlows
-include("plotting.jl")
+include("demand.jl")
+include("feature_graph.jl")
+include("mcf.jl")
 include("paths.jl")
 include("graph_utils.jl")
-include("core.jl")
-
 
 end # module MultiFlows

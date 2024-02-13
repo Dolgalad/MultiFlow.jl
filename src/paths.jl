@@ -27,13 +27,13 @@ length(p::Path) = Base.length(p.nodes)
     nv(p::Path)
 Number of nodes in path p.
 """
-nv(p::Path) = length(p)
+Graphs.nv(p::Path) = length(p)
 
 """
     ne(p::Path)
 Number of edges in path p.
 """
-ne(p::Path) = nv(p)<=1 ? 0 : nv(p)-1
+Graphs.ne(p::Path) = nv(p)<=1 ? 0 : nv(p)-1
 
 
 """
@@ -41,7 +41,7 @@ ne(p::Path) = nv(p)<=1 ? 0 : nv(p)-1
 
 Returns list of edges.
 """
-function edges(p::Path{T}) where {T<:Integer}
+function Graphs.edges(p::Path{T}) where {T<:Integer}
     if ne(p)==0
         return []
     end
