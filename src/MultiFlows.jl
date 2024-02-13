@@ -10,6 +10,8 @@ using SparseArrays
 export 
     Demand,
     FeatureDiGraph,
+    feature_dim,
+    feature_matrix,
     MCF,
     nk,
     nv,
