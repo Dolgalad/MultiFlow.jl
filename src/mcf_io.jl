@@ -56,3 +56,44 @@ function load_csv(dirname::String; edge_dir=:single)
     return MCF(fg, demands)
 end
 
+"""
+    save(pb::MCF, dirname::String)
+
+Save MCF instance to `dirname`. Will create the files `<dirname>/link.csv` and `<dirname>/service.csv`. If folder does not exist it will be created.
+"""
+function save(pb::MCF, dirname::String; verbose::Bool=false)
+    link_filename = joinpath(dirname, "link.csv")
+    service_filename = joinpath(dirname, "service.csv")
+    # link dataframe
+    link_df = DataFrame(srcNodeId=pb.graph.srcnodes, 
+                        dstNodeId=pb.graph.dstnodes, 
+                        cost=arc_features(pb.graph, 1), 
+                        capacity=arc_features(pb.graph, 2)
+                       )
+    #link_df = unique(link_df)
+    service_df = DataFrame(srcNodeId=[d.src for d in pb.demands], 
+                           dstNodeId=[d.dst for d in pb.demands], 
+                           amount=[d.amount for d in pb.demands])
+    if verbose
+        println("Saving instance to $dirname")
+    end
+    mkpath(dirname)
+    CSV.write(link_filename, link_df)
+    CSV.write(service_filename, service_df)
+    return link_filename, service_filename
+end
+
+"""
+    is_instance_dir(dirname::String)
+
+Check if a directory contains files `link.csv, service.csv`.
+
+```julia
+julia> save(pb, "test_instance")
+("test_instance/link.csv", "test_instance/service.csv")
+
+julia> is_instance_dir("test_instance")
+true
+```
+"""
+is_instance_dir(dirname::String) = isfile(joinpath(dirname, "link.csv")) && isfile(joinpath(dirname, "service.csv"))

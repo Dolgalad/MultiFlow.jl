@@ -3,11 +3,11 @@
 ## Index
 
 ```@index
-Pages = ["mcf_file.md"]
+Pages = ["mcf_io.md"]
 ```
 
 ## MCF file formats
-### Reading/writing CSV files
+### Reading CSV files
 MCF instances are stored as two CSV files, a `link.csv` file containing edge data and a `service.csv` file containing the demand data. 
 
 Example of a `link.csv` file: 
@@ -73,11 +73,20 @@ julia> adjacency_matrix(pb.graph)
  ⋅  ⋅  ⋅  1  ⋅  ⋅  1
  ⋅  ⋅  ⋅  1  1  1  ⋅
 ```
+
+### Saving instances
+To save an MCF instance to a directory : 
+```julia
+julia> save(pb, "path_to_instance")
+```
+
+This will create two files : `path_to_instance/link.csv` and `path_to_instance/service.csv`.
+
 ## Full docs
 
 ```@autodocs
 Modules = [MultiFlows]
-Pages = ["mcf_file.jl"]
+Pages = ["mcf_io.jl"]
 
 ```
 

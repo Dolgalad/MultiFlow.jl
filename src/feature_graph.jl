@@ -396,3 +396,45 @@ function double_edges!(g::FeatureDiGraph)
     end
     return g
 end
+
+"""
+    arc_features(g::FeatureDiGraph)
+
+Get array of arc features. Returns a `(ne(g), feature_dim(g))` array.
+
+# Examples
+```jldoctest
+julia> g = FeatureDiGraph([1,2,3,1], [2,3,1,4], hcat(3*ones(4), 4*ones(4)));
+
+julia> arc_features(g)
+4×2 Matrix{Float64}:
+ 3.0  4.0
+ 3.0  4.0
+ 3.0  4.0
+ 3.0  4.0
+```
+"""
+function arc_features(g::FeatureDiGraph)
+    return collect(transpose(hcat([e.features for e in edges(g)]...)))
+end
+
+"""
+    arc_features(g::FeatureDiGraph, idx::Int64)
+
+Get array of arc features corresponding to index `idx`. Returns a `(ne(g), 1)` array.
+
+# Examples
+```jldoctest
+julia> g = FeatureDiGraph([1,2,3,1], [2,3,1,4], hcat(3*ones(4), 4*ones(4)));
+
+julia> arc_features(g, 1)
+4-element Vector{Float64}:
+ 3.0
+ 3.0
+ 3.0
+ 3.0
+```
+"""
+function arc_features(g::FeatureDiGraph, idx::Int64)
+    return vcat([e.features[idx] for e in edges(g)]...)
+end

@@ -22,6 +22,7 @@ export
     ne,
     scale_features,
     double_edges!,
+    arc_features,
     Demand,
     MCF,
     weight_matrix,
@@ -31,13 +32,15 @@ export
     scale,
     normalize,
     load,
-    load_csv
+    load_csv,
+    save,
+    is_instance_dir
 
 #MultiFlows
 include("feature_graph.jl")
 include("demand.jl")
 include("mcf.jl")
-include("mcf_file.jl")
+include("mcf_io.jl")
 #include("paths.jl")
 #include("graph_utils.jl")
 
