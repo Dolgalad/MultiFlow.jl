@@ -39,23 +39,18 @@ function load_csv(dirname::String; edge_direction=false)
 
     srcnodes = dflinks.srcnodeid
     dstnodes = dflinks.dstnodeid
-    nodes = Set(vcat(srcnodes, dstnodes))
-    nnodes = length(nodes)
-    # keep a dictionary of original node ids to new ones
-    vmap = Dict(nodes .=> 1:nnodes)
+    # need to check that indexes start at 1
 
-    capacities = dflinks.bandwidth
-    costs = dflinks.cost
-    narcs = size(dflinks, 1) # number of arcs
+    capacity = dflinks.capacity
+    cost = dflinks.cost
+    fg = FeatureDiGraph(srcnodes, dstnodes, hcat(cost, capacity))
 
     # list of demands
     #store arrays for demands
     srcdemands = dfservices.srcnodeid
     dstdemands = dfservices.dstnodeid
-    bandwidths = dfservices.bandwidth
-    ndemands = size(dfservices, 1)# number of demands
-
-    return MCF(srcnodes, dstnodes, costs, capacities, srcdemands, dstdemands, bandwidths)
-
+    amounts = dfservices.amount
+    demands = [Demand(s,d,a) for (s,d,a) in zip(srcdemands, dstdemands, amounts)]
+    return MCF(fg, demands)
 end
 
