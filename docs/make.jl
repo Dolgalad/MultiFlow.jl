@@ -1,4 +1,6 @@
 push!(LOAD_PATH,"./src/")
+push!(LOAD_PATH,"../src/")
+
 using Documenter, MultiFlows
 
 
@@ -14,8 +16,9 @@ pages_files = [
         "index.md",
     ],
     "Core API" => [
-        "core_functions/core.md",
         "core_functions/feature_graph.md",
+        "core_functions/mcf.md",
+
     ],
 ]
 
@@ -26,7 +29,7 @@ pages = [
     ] for (section_name, section_files) in pages_files
 ]
 
-#makedocs(sitename="MultiFlows.jl documentation")
+DocMeta.setdocmeta!(MultiFlows, :DocTestSetup, :(using MultiFlows); recursive=true) 
 makedocs(
            sitename="MultiFlows.jl", 
            format = Documenter.HTML(prettyurls = false),
@@ -36,6 +39,7 @@ makedocs(
                    file in section_files
                ] for (section_name, section_files) in pages_files
            ],
+           modules=[MultiFlows],
 
         )
 

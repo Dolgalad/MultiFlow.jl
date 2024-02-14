@@ -31,9 +31,12 @@ Concrete directed graph with a feature vector for each arc.
 The default constructor expects `srcnodes, dstnodes` to be vectors of source and destination vertices for each edge and `arc_features` to by a vector of numbers. The following example initialises a directed graph with three vertices and edges and a single `Float64` feature on each edge.
 
 # Examplex
-```jldoctest featuregraph
+```jldoctest
+julia> using MultiFlows
+
 julia> g1 = FeatureDiGraph([1,2,3], [2,3,1], [5., 5., 5.])
 FeatureDiGraph{Int64, Float64}([1, 2, 3], [2, 3, 1], [5.0, 5.0, 5.0])
+
 ```
 """
 struct FeatureDiGraph{T<:Number,N} <: AbstractGraph{T}
@@ -47,14 +50,39 @@ end
 
 Construct a `FeatureDiGraph` object where edge features are given by `arc_features[i,:]`.
 
+# Examplex
 For example we can build a graph with a two-dimensional feature on each edge : 
-```jldoctest featuregraph
+
+```jldoctest
 julia> g = FeatureDiGraph([1,2,3], [2,3,1], 5 * ones(3,2))
 FeatureDiGraph{Int64, Vector{Float64}}([1, 2, 3], [2, 3, 1], [[5.0, 5.0], [5.0, 5.0], [5.0, 5.0]])
 ```
+
 """
 function FeatureDiGraph(srcnodes::Vector{T}, dstnodes::Vector{T}, arc_features::AbstractArray{N}) where {T<:Number, N<:Number}
     FeatureDiGraph(srcnodes, dstnodes, [arc_features[i,:] for i in 1:size(arc_features,1)])
+end
+
+
+"""
+    FeatureDiGraph(g::AbstractGraph{T}, arc_features::AbstractArray{N})
+
+Construct a feature graph from an `AbstractGraph` object and a set of features.
+
+# Examples
+```jldoctest
+julia> using Graphs
+
+julia> gr = grid((3,2));
+
+julia> FeatureDiGraph(gr, ones(ne(gr), 2))
+FeatureDiGraph{Int64, Vector{Float64}}([1, 1, 2, 2, 3, 4, 5], [2, 4, 3, 5, 6, 5, 6], [[1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0]])
+
+```
+"""
+function FeatureDiGraph(g::AbstractGraph{T}, arc_features::AbstractArray{N}) where {T<:Number, N<:Number}
+    edge_list = edges(g)
+    FeatureDiGraph(src.(edge_list), dst.(edge_list), arc_features)
 end
 
 """
@@ -70,7 +98,7 @@ Graphs.is_directed(g::FeatureDiGraph) = true
 Check if graph contains edge (s,d). 
 
 # Examples
-```jldoctest featuregraph
+```jldoctest; setup = :(g = FeatureDiGraph([1,2,3],[2,3,1],5*ones(3,2)))
 julia> using Graphs
 
 julia> has_edge(g, 1, 2)
@@ -78,6 +106,7 @@ true
 
 julia> has_edge(g, 2, 1)
 false
+
 ```
 """
 Graphs.has_edge(g::FeatureDiGraph{T,N}, s::T, d::T) where {T<:Number,N} = any(g.dstnodes[g.srcnodes .== s] .== d)
@@ -88,7 +117,7 @@ Graphs.has_edge(g::FeatureDiGraph{T,N}, s::T, d::T) where {T<:Number,N} = any(g.
 Returns number of vertices of the graph. Needed for compatibility with the _Graphs.jl_ package.
 
 # Examples
-```jldoctest featuregraph
+```jldoctest;setup = :(g = FeatureDiGraph([1,2,3],[2,3,1],5*ones(3,2)))
 julia> nv(g)
 3
 ```
@@ -101,7 +130,7 @@ Graphs.nv(g::FeatureDiGraph) = length(Set(vcat(g.srcnodes, g.dstnodes)))
 Return number of arcs of the graph. Needed for compatibility with the _Graphs.jl_ package.
 
 # Examples
-```jldoctest featuregraph
+```jldoctest;setup = :(g = FeatureDiGraph([1,2,3],[2,3,1],5*ones(3,2)))
 julia> ne(g)
 3
 ```
@@ -115,10 +144,14 @@ Get arc feature dimension.
 
 # Examplex
 ```jldoctest featuregraph
+julia> g1 = FeatureDiGraph([1,2,3], [2,3,1], ones(3));
+
 julia> feature_dim(g1) # scalar features
 ()
 
-julia> feature_dim(g)  # two-dimension features
+julia> g2 = FeatureDiGraph([1,2,3], [2,3,1], ones(3, 2));
+
+julia> feature_dim(g2)  # two-dimension features
 (2,)
 ```
 """
@@ -130,17 +163,19 @@ feature_dim(g::FeatureDiGraph) = size(g.arc_features[1])
 Add arc to a FeatureDiGraph object going from vertex `src` to `dst` and with features `feat`. Return `true` on success and `false` if graph already has an edge `(src, dst)`. 
 
 # Examples
-```jldoctest featuregraph
-julia> add_edge!(g1, 1, 4, 2.)
+```jldoctest; setup = :(using Graphs)
+julia> g = FeatureDiGraph([1,2,3], [2,3,1], ones(3,2));
+
+julia> add_edge!(g, 1, 4, [2., 2.])
 true
 
-julia> add_edge!(g1, 1, 2, 3.)
+julia> add_edge!(g, 1, 2, [3., 3.])
 false
 
-julia> nv(g1), ne(g1)
+julia> nv(g), ne(g)
 (4, 4)
 
-julia> add_edge(g, 1, 4, ones(3)) # must have feature_dim(g) == size(feat)
+julia> add_edge!(g, 1, 4, ones(3)) # must have feature_dim(g) == size(feat)
 ERROR: DimensionMismatch("Expected feature dimension (2,) got (3,)")
 [...]
 ```
@@ -165,13 +200,15 @@ end
 Return list of edges of the graph. Needed for compatibility with _Graphs.jl_ package.
 
 # Examples
-```jldoctest featuregraph
-julia> edges(g1)
-4-element Vector{MultiFlows.FeatureDiGraphEdge{Int64, Int64}}:
- MultiFlows.FeatureDiGraphEdge{Int64, Int64}(1, 2, 1)
- MultiFlows.FeatureDiGraphEdge{Int64, Int64}(2, 3, 1)
- MultiFlows.FeatureDiGraphEdge{Int64, Int64}(3, 1, 1)
- MultiFlows.FeatureDiGraphEdge{Int64, Int64}(1, 4, 2)
+```jldoctest; setup = :(using Graphs)
+julia> g = FeatureDiGraph([1,2,3,1], [2,3,1,4], [1,1,1,2]);
+
+julia> edges(g)
+4-element Vector{FeatureDiGraphEdge{Int64, Int64}}:
+ FeatureDiGraphEdge{Int64, Int64}(1, 2, 1)
+ FeatureDiGraphEdge{Int64, Int64}(2, 3, 1)
+ FeatureDiGraphEdge{Int64, Int64}(3, 1, 1)
+ FeatureDiGraphEdge{Int64, Int64}(1, 4, 2)
 
 ```
 """
@@ -185,8 +222,8 @@ end
 Get outgoing neighbors of vertex v in the graph. Needed for compatibility with _Graphs.jl_ package.
 
 # Examples
-```jldoctest featuregraph
-julia> outneighbors(g1, 1)
+```jldoctest; setup = :(using Graphs; g = FeatureDiGraph([1,2,3,1],[2,3,1,4],[1,1,1,2]))
+julia> outneighbors(g, 1)
 2-element Vector{Int64}:
  2
  4
@@ -203,8 +240,8 @@ end
 Get neighbors u of vertex v such that edge (u,v) belongs to the graph. Needed for compatibility with _Graphs.jl_ package.
 
 # Examples
-```jldoctest featuregraph
-julia> inneighbors(g1, 1)
+```jldoctest; setup = :(using Graphs; g = FeatureDiGraph([1,2,3,1],[2,3,1,4],[1,1,1,2]))
+julia> inneighbors(g, 1)
 1-element Vector{Int64}:
  3
 
@@ -220,17 +257,38 @@ end
 Get a `nv(g) x nv(g)` matrix with coefficients equal to arc feature values. Values returned as a sparse matrix.
 
 # Examples
-```jldoctest featuregraph
-julia> feature_matrix(g, 1)
-4×4 SparseMatrixCSC{Float64, Int64} with 4 stored entries:
+
+Graph with scalar features : 
+```jldoctest
+julia> g = FeatureDiGraph([1,2,3,1], [2,3,1,4], [5.0, 5.0, 5.0, 1.0]);
+
+julia> feature_matrix(g)
+4×4 SparseArrays.SparseMatrixCSC{Float64, Int64} with 4 stored entries:
   ⋅   5.0   ⋅   1.0
   ⋅    ⋅   5.0   ⋅
  5.0   ⋅    ⋅    ⋅
   ⋅    ⋅    ⋅    ⋅
 
 ```
+
+Graph with multi-dimensional features : 
+```jldoctest
+julia> g = FeatureDiGraph([1,2,3,1], [2,3,1,4], hcat(3*ones(4), 4*ones(4)));
+
+julia> feature_matrix(g, 2)
+4×4 SparseArrays.SparseMatrixCSC{Float64, Int64} with 4 stored entries:
+  ⋅   4.0   ⋅   4.0
+  ⋅    ⋅   4.0   ⋅
+ 4.0   ⋅    ⋅    ⋅
+  ⋅    ⋅    ⋅    ⋅
+
+```
+
 """
-function feature_matrix(g::FeatureDiGraph, feature_idx::Int64) where {T<:Number, N}
+function feature_matrix(g::FeatureDiGraph, feature_idx::Int64=1) where {T<:Number, N}
+    if isempty(feature_dim(g)) # scalar features
+        return sparse(g.srcnodes, g.dstnodes, [f for f in g.arc_features], nv(g), nv(g))
+    end
     return sparse(g.srcnodes, g.dstnodes, [f[feature_idx] for f in g.arc_features], nv(g), nv(g))
 end
 
@@ -241,19 +299,19 @@ Get a `nv(g) x nv(g) x size(feature_idx)` matrix with coefficients equal to arc 
 TODO : managing feature_idx with multiple dimensions.
 
 # Examples
-```jldoctest featuregraph
+```jldoctest; setup = :(g = FeatureDiGraph([1,2,3,1], [2,3,1,4], hcat(3*ones(4), 4*ones(4))))
 julia> feature_matrix(g, [2, 1])
 4×4×2 Array{Float64, 3}:
 [:, :, 1] =
- 0.0  5.0  0.0  1.0
- 0.0  0.0  5.0  0.0
- 5.0  0.0  0.0  0.0
+ 0.0  4.0  0.0  4.0
+ 0.0  0.0  4.0  0.0
+ 4.0  0.0  0.0  0.0
  0.0  0.0  0.0  0.0
 
 [:, :, 2] =
- 0.0  5.0  0.0  1.0
- 0.0  0.0  5.0  0.0
- 5.0  0.0  0.0  0.0
+ 0.0  3.0  0.0  3.0
+ 0.0  0.0  3.0  0.0
+ 3.0  0.0  0.0  0.0
  0.0  0.0  0.0  0.0
 
 ```
@@ -265,3 +323,32 @@ function feature_matrix(g::FeatureDiGraph, feature_idx::AbstractArray{Int64})
     end
     return ans
 end
+
+"""
+    Graphs.weights(g::FeatureDiGraph, feature_idx::Int64=1)
+
+Get graph weight matrix corresponding to in feature with index `idx`. Needed for compatibility with _Graphs.jl_.
+
+# Examples
+```jldoctest
+julia> g = FeatureDiGraph([1,2,3,1], [2,3,1,3],[[1,1],[1,1],[1,1],[4,1]])
+FeatureDiGraph{Int64, Vector{Int64}}([1, 2, 3, 1], [2, 3, 1, 3], [[1, 1], [1, 1], [1, 1], [4, 1]])
+
+julia> ds = dijkstra_shortest_paths(g, 1);
+
+julia> enumerate_paths(ds, 3)
+3-element Vector{Int64}:
+ 1
+ 2
+ 3
+
+julia> ds = dijkstra_shortest_paths(g, 1, weights(g, 2));
+
+julia> enumerate_paths(ds, 3)
+2-element Vector{Int64}:
+ 1
+ 3
+ ```
+
+"""
+Graphs.weights(g::FeatureDiGraph, idx::Int64=1) = feature_matrix(g, idx)
