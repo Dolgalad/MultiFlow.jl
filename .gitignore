@@ -1,2 +1,5 @@
 # ignore documentation build dir
 docs/build/
+
+# manifest files
+Manifest.toml

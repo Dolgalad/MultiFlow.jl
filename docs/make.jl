@@ -19,6 +19,8 @@ pages_files = [
         "core_functions/feature_graph.md",
         "core_functions/mcf.md",
         "core_functions/mcf_io.md",
+        "core_functions/mcf_plot.md",
+
     ],
 ]
 

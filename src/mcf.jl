@@ -249,3 +249,17 @@ julia> capacity_matrix(pbn)
 function normalize(pb::MCF)
     return scale(pb, 1.0/maximum(cost_matrix(pb)), 1.0/max(maximum(capacity_matrix(pb)), maximum([d.amount for d in pb.demands])))
 end
+
+"""
+    has_demand(pb::MCF{T,N}, s::T, d::T)
+
+Check if problem has a demand originating at vertex `s` and with destination `d`.
+"""
+function has_demand(pb::MCF{T,N}, s::T, d::T) where {T,N}
+    for d in pb.demands
+        if d.src == s && d.dst == d
+            return true
+        end
+    end
+    return false
+end
