@@ -42,6 +42,36 @@ MCF(nv = 7, ne = 10, nk = 3)
 	Demand{Int64, Int64}(1, 7, 5)
 	Demand{Int64, Int64}(2, 6, 5)
 	Demand{Int64, Int64}(3, 7, 5)
+
+julia> adjacency_matrix(pb.graph)
+7×7 SparseArrays.SparseMatrixCSC{Int64, Int64} with 10 stored entries:
+ ⋅  1  ⋅  1  1  ⋅  ⋅
+ ⋅  ⋅  1  1  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  1  ⋅  ⋅  ⋅
+ ⋅  ⋅  ⋅  ⋅  ⋅  1  1
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  1
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  1
+ ⋅  ⋅  ⋅  ⋅  ⋅  ⋅  ⋅
+```
+
+By default the edges in the `link.csv` file are added only in one direction. Ensuring that edges exist in both directions can be achieved by passing `edge_dir = :double` to the `load` function. Note that for each edge that is specified in only one direction within the CSV file, features will be copied.
+
+```julia
+julia> pb = load(dirname, edge_dir=:double)
+MCF(nv = 7, ne = 20, nk = 3)
+	Demand{Int64, Int64}(1, 7, 5)
+	Demand{Int64, Int64}(2, 6, 5)
+	Demand{Int64, Int64}(3, 7, 5)
+
+julia> adjacency_matrix(pb.graph)
+7×7 SparseArrays.SparseMatrixCSC{Int64, Int64} with 20 stored entries:
+ ⋅  1  ⋅  1  1  ⋅  ⋅
+ 1  ⋅  1  1  ⋅  ⋅  ⋅
+ ⋅  1  ⋅  1  ⋅  ⋅  ⋅
+ 1  1  1  ⋅  ⋅  1  1
+ 1  ⋅  ⋅  ⋅  ⋅  ⋅  1
+ ⋅  ⋅  ⋅  1  ⋅  ⋅  1
+ ⋅  ⋅  ⋅  1  1  1  ⋅
 ```
 ## Full docs
 

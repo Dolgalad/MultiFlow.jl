@@ -21,6 +21,7 @@ export
     nv,
     ne,
     scale_features,
+    double_edges!,
     Demand,
     MCF,
     weight_matrix,
@@ -31,23 +32,6 @@ export
     normalize,
     load,
     load_csv
-    #graph,
-    #weight_matrix,
-    #cost_matrix,
-    #capacity_matrix,
-    #scale,
-    #normalize,
-    ## loading MCFs
-    #load,
-    ## plotting
-    #plot,
-    ## paths
-    #AbstractPath,
-    #Path,
-    #weight,
-    #edges,
-    ## graph utilities
-    #arc_index_matrix
 
 #MultiFlows
 include("feature_graph.jl")

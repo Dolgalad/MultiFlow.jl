@@ -13,9 +13,9 @@ Load MultiFlow problem from file. If format=:csv uses [`load_csv(dirname::String
 - `:double` : each edge in the input file is interpreted as existing in both directions with the same attributes and features
 
 """
-function load(dirname::String; format=:csv, edge_direction=:single)
+function load(dirname::String; format=:csv, edge_dir=:single)
     if format==:csv
-        return load_csv(dirname)
+        return load_csv(dirname, edge_dir=edge_dir)
     else
         throw(UnknownMultiFlowFormat("Unknown format "*format))
     end
@@ -26,7 +26,7 @@ end
 
 Load MultiFlow instance from CSV files. Default is to search for a link.csv and service.csv file.
 """
-function load_csv(dirname::String; edge_direction=false)
+function load_csv(dirname::String; edge_dir=:single)
     linkpath = joinpath(dirname, "link.csv")
     servicepath = joinpath(dirname, "service.csv")
     if !isfile(linkpath) || !isfile(servicepath)
@@ -40,10 +40,12 @@ function load_csv(dirname::String; edge_direction=false)
     srcnodes = dflinks.srcnodeid
     dstnodes = dflinks.dstnodeid
     # need to check that indexes start at 1
-
     capacity = dflinks.capacity
     cost = dflinks.cost
     fg = FeatureDiGraph(srcnodes, dstnodes, hcat(cost, capacity))
+    if edge_dir==:double
+        fg = double_edges!(fg)
+    end
 
     # list of demands
     #store arrays for demands

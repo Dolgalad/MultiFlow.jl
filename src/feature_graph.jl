@@ -363,3 +363,36 @@ Scale the features of the graph by `factor`. `factor` should have the same dimen
 function scale_features(g::FeatureDiGraph{T,N}, factor::N) where {T<:Number,N}
     return FeatureDiGraph(g.srcnodes, g.dstnodes, [factor .* f for f in g.arc_features])
 end
+
+"""
+    double_edges!(g::FeatureDiGraph)
+
+For each edge `(u,v)` add edge `(v,u)` if not already present in the graph. Features of the edge are copied.
+
+# Examples
+```jldoctest
+julia> using Graphs
+
+julia> g = FeatureDiGraph([1,2,3,1], [2,3,1,3],[[1,1],[1,1],[1,1],[4,1]])
+FeatureDiGraph{Int64, Vector{Int64}}([1, 2, 3, 1], [2, 3, 1, 3], [[1, 1], [1, 1], [1, 1], [4, 1]])
+
+julia> ne(g)
+4
+
+julia> double_edges!(g)
+FeatureDiGraph{Int64, Vector{Int64}}([1, 2, 3, 1, 2, 3], [2, 3, 1, 3, 1, 2], [[1, 1], [1, 1], [1, 1], [4, 1], [1, 1], [1, 1]])
+
+julia> ne(g)
+6
+```
+
+"""
+function double_edges!(g::FeatureDiGraph)
+    orig_edges = edges(g)
+    for e in orig_edges
+        if !has_edge(g, dst(e), src(e))
+            add_edge!(g, dst(e), src(e), e.features)
+        end
+    end
+    return g
+end
