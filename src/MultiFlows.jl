@@ -13,15 +13,24 @@ using SimpleWeightedGraphs
 using SparseArrays
 
 export 
-    #Demand,
     FeatureDiGraphEdge,
     FeatureDiGraph,
     feature_dim,
     feature_matrix,
-    #MCF,
     nk,
     nv,
-    ne
+    ne,
+    scale_features,
+    Demand,
+    MCF,
+    weight_matrix,
+    cost_matrix,
+    capacity_matrix,
+    scale_demands,
+    scale,
+    normalize,
+    load,
+    load_csv
     #graph,
     #weight_matrix,
     #cost_matrix,
@@ -41,9 +50,10 @@ export
     #arc_index_matrix
 
 #MultiFlows
-#include("demand.jl")
 include("feature_graph.jl")
-#include("mcf.jl")
+include("demand.jl")
+include("mcf.jl")
+include("mcf_file.jl")
 #include("paths.jl")
 #include("graph_utils.jl")
 

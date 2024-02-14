@@ -18,7 +18,7 @@ pages_files = [
     "Core API" => [
         "core_functions/feature_graph.md",
         "core_functions/mcf.md",
-
+        "core_functions/mcf_file.md",
     ],
 ]
 

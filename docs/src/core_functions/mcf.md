@@ -12,7 +12,7 @@ Pages = ["mcf.md"]
 
 ```@autodocs
 Modules = [MultiFlows]
-Pages = ["mcf.jl"]
+Pages = ["demand.jl", "mcf.jl"]
 
 ```
 

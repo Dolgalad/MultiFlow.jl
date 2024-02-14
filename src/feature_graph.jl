@@ -331,6 +331,8 @@ Get graph weight matrix corresponding to in feature with index `idx`. Needed for
 
 # Examples
 ```jldoctest
+julia> using Graphs
+
 julia> g = FeatureDiGraph([1,2,3,1], [2,3,1,3],[[1,1],[1,1],[1,1],[4,1]])
 FeatureDiGraph{Int64, Vector{Int64}}([1, 2, 3, 1], [2, 3, 1, 3], [[1, 1], [1, 1], [1, 1], [4, 1]])
 
@@ -348,7 +350,16 @@ julia> enumerate_paths(ds, 3)
 2-element Vector{Int64}:
  1
  3
- ```
+```
 
 """
 Graphs.weights(g::FeatureDiGraph, idx::Int64=1) = feature_matrix(g, idx)
+
+"""
+    scale_features(g::FeatureDiGraph{T,N}, factor::N)
+
+Scale the features of the graph by `factor`. `factor` should have the same dimension as the edge features.
+"""
+function scale_features(g::FeatureDiGraph{T,N}, factor::N) where {T<:Number,N}
+    return FeatureDiGraph(g.srcnodes, g.dstnodes, [factor .* f for f in g.arc_features])
+end
