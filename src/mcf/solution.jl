@@ -188,6 +188,6 @@ julia> objective_value(sol, pb)
 
 """
 function objective_value(sol::MCFSolution, pb::MCF)
-    return sum(pb.demands[k].amount * sum(sol.flows[k][i] * path_weight(sol.paths[k][i], pb.graph) for i in 1:length(sol.flows[k])) for k in 1:nk(pb))
+    return sum(pb.demands[k].amount * sum(sol.flows[k][i] * path_weight(sol.paths[k][i], pb.graph) for i in 1:length(sol.flows[k])) for k in 1:nk(pb) if !Base.isempty(sol.paths[k]))
 end
 

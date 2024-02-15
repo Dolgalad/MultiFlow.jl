@@ -4,9 +4,12 @@ using Cairo
 using Colors
 
 """
-    mcfplot(pb::MCF, layout::Function=spring_layout)
+    mcfplot(pb::MCF, layout::Function=spring_layout;
+            minedgelinewidth=1.0,
+            maxedgelinewidth=10.0,
+    )
 
-Plot MCF problem. _MultiFlows.jl_ uses the _GraphPlot.jl_ package for generating graph plots.
+Plot MCF problem. _MultiFlows.jl_ uses the _GraphPlot.jl_ package for generating graph plots. Edge line widths are scaled onto `[minedgelinewidth, maxedgelinewidth]` as a function of edge capacity and demand amounts.
 """
 function mcfplot(pb::MCF, layout::Function=spring_layout; 
         minedgelinewidth=1.0,

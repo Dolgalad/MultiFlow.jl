@@ -13,9 +13,9 @@ Load MultiFlow problem from file. If format=:csv uses [`load_csv(dirname::String
 - `:double` : each edge in the input file is interpreted as existing in both directions with the same attributes and features
 
 """
-function load(dirname::String; format=:csv, edge_dir=:single)
+function load(dirname::String; format=:csv, edge_dir=:single, keyargs...)
     if format==:csv
-        return load_csv(dirname, edge_dir=edge_dir)
+        return load_csv(dirname, edge_dir=edge_dir; keyargs...)
     else
         throw(UnknownMultiFlowFormat("Unknown format "*format))
     end
@@ -26,7 +26,16 @@ end
 
 Load MultiFlow instance from CSV files. Default is to search for a link.csv and service.csv file.
 """
-function load_csv(dirname::String; edge_dir=:single)
+function load_csv(dirname::String; 
+                  edge_dir=:single, 
+                  srcnode_fieldname="srcnodeid",
+                  dstnode_fieldname="dstnodeid",
+                  cost_fieldname="cost",
+                  capacity_fieldname="capacity",
+                  demand_srcnode_fieldname="srcnodeid",
+                  demand_dstnode_fieldname="dstnodeid",
+                  demand_amount_fieldname="amount"
+    )
     linkpath = joinpath(dirname, "link.csv")
     servicepath = joinpath(dirname, "service.csv")
     if !isfile(linkpath) || !isfile(servicepath)
@@ -37,11 +46,11 @@ function load_csv(dirname::String; edge_dir=:single)
     dfservices = CSV.read(servicepath, DataFrame)
     rename!(dfservices, strip.(lowercase.(names(dfservices))))
 
-    srcnodes = dflinks.srcnodeid
-    dstnodes = dflinks.dstnodeid
+    srcnodes = dflinks[!, srcnode_fieldname]
+    dstnodes = dflinks[!, dstnode_fieldname]
     # need to check that indexes start at 1
-    capacity = dflinks.capacity
-    cost = dflinks.cost
+    capacity = dflinks[!, capacity_fieldname]
+    cost = dflinks[!, cost_fieldname]
     fg = FeatureDiGraph(srcnodes, dstnodes, hcat(cost, capacity))
     if edge_dir==:double
         fg = double_edges!(fg)
@@ -49,9 +58,9 @@ function load_csv(dirname::String; edge_dir=:single)
 
     # list of demands
     #store arrays for demands
-    srcdemands = dfservices.srcnodeid
-    dstdemands = dfservices.dstnodeid
-    amounts = dfservices.amount
+    srcdemands = dfservices[!, demand_srcnode_fieldname]
+    dstdemands = dfservices[!, demand_dstnode_fieldname]
+    amounts = dfservices[!, demand_amount_fieldname]
     demands = [Demand(s,d,a) for (s,d,a) in zip(srcdemands, dstdemands, amounts)]
     return MCF(fg, demands)
 end

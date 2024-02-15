@@ -56,7 +56,9 @@ export
     save,
     is_instance_dir,
     # plotting
-    mcfplot
+    mcfplot,
+    # heuristic solver
+    solve_shortest_paths
 
 #MultiFlows
 include("feature_graph.jl")
@@ -66,7 +68,8 @@ include("mcf/mcf.jl")
 include("mcf/solution.jl")
 include("mcf/io.jl")
 include("mcf/plot.jl")
-#include("paths.jl")
+include("mcf/heuristic_solver.jl")
+include("compact_solver.jl")
 #include("graph_utils.jl")
 
 end # module MultiFlows
