@@ -39,9 +39,14 @@ export
     scale_demands,
     scale,
     normalize,
+    has_demand,
+    costs,
+    capacities,
     # MCF solutions
     MCFSolution,
     is_solution,
+    arc_flow_value,
+    is_feasible,
     # reading/writing
     load,
     load_csv,

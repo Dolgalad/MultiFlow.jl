@@ -37,9 +37,9 @@ MCF(nv = 6, ne = 14, nk = 1)
 `cost, capacity` vectors must have same length as `ne(gr)` : 
 """
 function MCF(g::AbstractGraph{T}, cost::Vector{N}, capacity::Vector{N}, demands::Vector{Demand{T,N}}) where {T<:Number, N<:Number}
-    if (ne(g) != length(cost)) || (ne(g) != length(capacity))
-        throw(DimensionMismatch("Expect ne(g) == length(cost) == length(capacity), got $((ne(g), length(cost), length(capacity)))"))
-    end
+    #if (ne(g) != length(cost)) || (ne(g) != length(capacity))
+    #    throw(DimensionMismatch("Expect ne(g) == length(cost) == length(capacity), got $((ne(g), length(cost), length(capacity)))"))
+    #end
     fg = FeatureDiGraph(g, hcat(cost, capacity))
     MCF(fg, demands)
 end
@@ -260,12 +260,62 @@ end
     has_demand(pb::MCF{T,N}, s::T, d::T)
 
 Check if problem has a demand originating at vertex `s` and with destination `d`.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), ones(7), ones(7), [Demand(1,2,1.)]);
+
+julia> has_demand(pb, 1, 2)
+true
+
+julia> has_demand(pb, 2, 1)
+false
+```
 """
-function has_demand(pb::MCF{T,N}, s::T, d::T) where {T,N}
+function has_demand(pb::MCF{T,N}, s::T, t::T) where {T,N}
     for d in pb.demands
-        if d.src == s && d.dst == d
+        if d.src == s && d.dst == t
             return true
         end
     end
     return false
+end
+
+"""
+    costs(pb::MCF)
+
+Return edge costs in a Vector.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> x, y = rand(14), rand(14);
+
+julia> pb = MCF(grid((3,2)), x, y, [Demand(1,2,1.)]);
+
+julia> costs(pb) == x
+true
+```
+"""
+function costs(pb::MCF)
+    return edge_features(pb.graph, 1)
+end
+
+"""
+    capacities(pb::MCF)
+
+Return edge capacities in a Vector.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> x, y = rand(14), rand(14);
+
+julia> pb = MCF(grid((3,2)), x, y, [Demand(1,2,1.)]);
+
+julia> capacities(pb) == y
+true
+```
+
+"""
+function capacities(pb::MCF)
+    return edge_features(pb.graph, 2)
 end

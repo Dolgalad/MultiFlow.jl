@@ -69,3 +69,49 @@ false
 function is_solution(sol::MCFSolution, pb::MCF)
     return (length(sol.paths) == length(sol.flows) == nk(pb)) && all(all(is_path(p, pb.graph) for p in sol.paths[k]) for k in 1:nk(pb)) && all(all(is_path(p, pb.demands[k].src, pb.demands[k].dst) for p in sol.paths[k]) for k in 1:nk(pb)) && all(sum(sol.flows[k]) <= 1 for k in 1:nk(pb))
 end
+
+"""
+    arc_flow_value(sol::MCFSolution, pb::MCF)
+
+Returns a `(nk(pb), ne(pb))` sized matrix where coefficients `x[k,a]` is the amount of flow for demand `k` circulating through `a`.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), collect(1:7.), collect(10:16.), [Demand(1,2,1.)]);
+
+julia> sol = MCFSolution([[VertexPath([1,2]), VertexPath([1,4,5,2])]], [[.5, .5]]);
+
+julia> arc_flow_value(sol, pb)
+1×14 Matrix{Float64}:
+ 0.5  0.5  0.0  0.0  0.0  0.5  0.0  0.0  0.0  0.0  0.5  0.0  0.0  0.0
+
+```
+"""
+function arc_flow_value(sol::MCFSolution, pb::MCF)
+    if !is_solution(sol, pb)
+        throw(ArgumentError("Provided solution is not valid for the problem"))
+    end
+    x = zeros(nk(pb), ne(pb))
+    for k in 1:nk(pb)
+        for i in 1:length(sol.paths[k])
+            x[k,edge_indices(sol.paths[k][i], pb.graph)] .+= sol.flows[k][i]
+        end
+    end
+    return x
+end
+
+"""
+    is_feasible(sol::MCFSolution, pb::MCF)
+
+Check if the solution is feasible, has to be a valid solution for the problem and the total amount circulating on the graph must not be greater than the edge capacities.
+"""
+function is_feasible(sol::MCFSolution, pb::MCF)
+    used_cap = zeros(ne(pb))
+    for k in 1:nk(pb)
+        demand = pb.demands[k]
+        for i in 1:length(sol.paths[k])
+            used_cap[edge_indices(sol.paths[k][i], pb.graph)] .+= sol.flows[k][i] * demand.amount
+        end
+    end
+    return all(used_cap .<= capacities(pb))
+end
