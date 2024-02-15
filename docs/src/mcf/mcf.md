@@ -25,9 +25,9 @@ For each ``k \in K`` we defined ``P^k`` the set of ``s_k-t_k``-paths composed of
 ```math
 \begin{aligned}
 \min\limits & \sum\limits_{k \in K} \sum\limits_{p\in P^k} \sum\limits_{a\in p} b_k r_a x_p^k & & (5) \\
-\text{s.t.} &\sum\limits_{p\in P^k} x_p^k  = 1 & \forall k\in K & (6)\\
-&\sum\limits_{k\in K} \sum\limits_{p\in P^k_a} b_k x_p^k \leq c_a & \forall a \in A  & (7)\\
-&x_p^k \in [0, 1] & \forall k\in K, p\in P^k & (8)
+\text{s.t.} &\sum\limits_{p\in P^k} x_p^k  = 1 & \forall k\in K \quad & (6)\\
+&\sum\limits_{k\in K} \sum\limits_{p\in P^k_a} b_k x_p^k \leq c_a & \forall a \in A \quad & (7)\\
+&x_p^k \in [0, 1] & \forall k\in K, p\in P^k \quad & (8)
 \end{aligned}
 ```
 

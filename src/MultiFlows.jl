@@ -48,6 +48,8 @@ export
     is_solution,
     arc_flow_value,
     is_feasible,
+    used_capacity,
+    objective_value,
     # reading/writing
     load,
     load_csv,

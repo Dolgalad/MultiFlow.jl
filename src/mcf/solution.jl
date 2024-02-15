@@ -101,17 +101,93 @@ function arc_flow_value(sol::MCFSolution, pb::MCF)
 end
 
 """
-    is_feasible(sol::MCFSolution, pb::MCF)
+    used_capacity(sol::MCFSolution, pb::MCF)
 
-Check if the solution is feasible, has to be a valid solution for the problem and the total amount circulating on the graph must not be greater than the edge capacities.
+Compute total edge capacity used by the solution.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), ones(14), ones(14), [Demand(1,2,2.)]);
+
+julia> sol = MCFSolution([[VertexPath([1,4,5,2])]], [[1.]]);
+
+julia> used_capacity(sol, pb)
+14-element Vector{Float64}:
+ 0.0
+ 2.0
+ 0.0
+ 0.0
+ 0.0
+ 2.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 2.0
+ 0.0
+ 0.0
+ 0.0
+
+```
 """
-function is_feasible(sol::MCFSolution, pb::MCF)
-    used_cap = zeros(ne(pb))
+function used_capacity(sol::MCFSolution, pb::MCF)
+  used_cap = zeros(ne(pb))
     for k in 1:nk(pb)
         demand = pb.demands[k]
         for i in 1:length(sol.paths[k])
             used_cap[edge_indices(sol.paths[k][i], pb.graph)] .+= sol.flows[k][i] * demand.amount
         end
     end
-    return all(used_cap .<= capacities(pb))
+    return used_cap
 end
+
+"""
+    is_feasible(sol::MCFSolution, pb::MCF)
+
+Check if the solution is feasible, has to be a valid solution for the problem and the total amount circulating on the graph must not be greater than the edge capacities and all demands must be routed entirely.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), ones(14), ones(14), [Demand(1,2,2.)]);
+
+julia> sol = MCFSolution([[VertexPath([1,4,5,2])]], [[1.]]);
+
+julia> is_feasible(sol, pb)
+false
+
+julia> sol = MCFSolution([[VertexPath([1,2]), VertexPath([1,4,5,2])]], [[.5, .5]]);
+
+julia> is_feasible(sol, pb)
+true
+```
+
+"""
+function is_feasible(sol::MCFSolution, pb::MCF)
+    return all(used_capacity(sol, pb) .<= capacities(pb)) && all(sum(sol.flows[k])==1 for k in 1:nk(pb))
+end
+
+"""
+    objective_value(sol::MCFSolution, pb::MCF)
+
+Compute the objective value of `sol`. 
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), ones(14), ones(14), [Demand(1,2,2.)]);
+
+julia> sol = MCFSolution([[VertexPath([1,4,5,2])]], [[1.]]);
+
+julia> objective_value(sol, pb)
+6.0
+
+julia> sol = MCFSolution([[VertexPath([1,2]), VertexPath([1,4,5,2])]], [[.5, .5]]);
+
+julia> objective_value(sol, pb)
+4.0
+```
+
+"""
+function objective_value(sol::MCFSolution, pb::MCF)
+    return sum(pb.demands[k].amount * sum(sol.flows[k][i] * path_weight(sol.paths[k][i], pb.graph) for i in 1:length(sol.flows[k])) for k in 1:nk(pb))
+end
+

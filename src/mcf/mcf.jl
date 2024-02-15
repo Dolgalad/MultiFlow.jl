@@ -340,3 +340,5 @@ Demand{Int64, Float64}[]
 function demands(pb::MCF{T,N}, s::T, t::T) where {T,N}
     return [d for d in pb.demands if d.src==s && d.dst==t]
 end
+
+
