@@ -24,6 +24,10 @@ Get edge destination.
 Graphs.dst(e::FeatureDiGraphEdge) = e.dst
 
 """
+"""
+Graphs.reverse(e::FeatureDiGraphEdge) = FeatureDiGraphEdge(e.dst, e.src, e.features)
+
+"""
     FeatureDiGraph{T,N}
 
 Concrete directed graph with a feature vector for each edge.
@@ -67,22 +71,43 @@ end
 """
     FeatureDiGraph(g::AbstractGraph{T}, features::AbstractArray{N})
 
-Construct a feature graph from an `AbstractGraph` object and a set of features.
+Construct a feature graph from an `AbstractGraph` object and a set of features. If `g` is an undirected graph the edges will be added in both directions and `features` should have first dimension either `ne(g)` in which case features are duplicated in both directions, or `2*ne(g)`.
 
 # Examples
 ```jldoctest
 julia> using Graphs
 
-julia> gr = grid((3,2));
+julia> gr = complete_digraph(5)
+{5, 20} directed simple Int64 graph
 
 julia> FeatureDiGraph(gr, ones(ne(gr), 2))
-FeatureDiGraph{Int64, Vector{Float64}}([1, 1, 2, 2, 3, 4, 5], [2, 4, 3, 5, 6, 5, 6], [[1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0]])
+FeatureDiGraph{Int64, Vector{Float64}}([1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5], [2, 3, 4, 5, 1, 3, 4, 5, 1, 2, 4, 5, 1, 2, 3, 5, 1, 2, 3, 4], [[1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0]])
+
+julia> gr = complete_graph(5)
+{5, 10} undirected simple Int64 graph
+
+julia> FeatureDiGraph(gr, ones(2*ne(gr), 2))
+FeatureDiGraph{Int64, Vector{Float64}}([1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 2, 3, 4, 5, 3, 4, 5, 4, 5, 5], [2, 3, 4, 5, 3, 4, 5, 4, 5, 5, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4], [[1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 1.0]])
 
 ```
 """
 function FeatureDiGraph(g::AbstractGraph{T}, features::AbstractArray{N}) where {T<:Number, N<:Number}
-    edge_list = edges(g)
-    FeatureDiGraph(src.(edge_list), dst.(edge_list), features)
+    if is_directed(g)
+        if size(features,1) != ne(g)
+            throw(DimensionMismatch("Graph is directed, expected size(features,1) == ne(g), got size(features,1) = $(size(features,1)) and ne(g) = $(ne(g))"))
+        end
+        edge_list = edges(g)
+        FeatureDiGraph(src.(edge_list), dst.(edge_list), features)
+    else
+        edge_list = vcat(collect(edges(g)), reverse.(edges(g)))
+        if size(features,1) == ne(g)
+            FeatureDiGraph(src.(edge_list), dst.(edge_list), [features;features])
+        elseif size(features,1) == 2*ne(g)
+            FeatureDiGraph(src.(edge_list), dst.(edge_list), features)
+        else
+            throw(DimensionMismatch("Graph is undirected, expected size(features,1) == 2*ne(g), got size(features,1) = $(size(features,1)) and ne(g) = $(ne(g))"))
+        end
+    end
 end
 
 """
@@ -286,7 +311,7 @@ julia> feature_matrix(g, 2)
 
 """
 function feature_matrix(g::FeatureDiGraph, feature_idx::Int64=1) where {T<:Number, N}
-    if isempty(feature_dim(g)) # scalar features
+    if Base.isempty(feature_dim(g)) # scalar features
         return sparse(g.srcnodes, g.dstnodes, [f for f in g.features], nv(g), nv(g))
     end
     return sparse(g.srcnodes, g.dstnodes, [f[feature_idx] for f in g.features], nv(g), nv(g))

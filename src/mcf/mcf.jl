@@ -30,7 +30,7 @@ julia> using Graphs
 julia> gr = grid((3,2));
 
 julia> MCF(gr, ones(ne(gr)), ones(ne(gr)), [Demand(1,6,1.0)])
-MCF(nv = 6, ne = 7, nk = 1)
+MCF(nv = 6, ne = 14, nk = 1)
 	Demand{Int64, Float64}(1, 6, 1.0)
 ```
 
@@ -65,7 +65,7 @@ Number of edges in the MCF network.
 # Examples
 ```jldoctest; setup = :(using Graphs; pb = MCF(grid((3,2)), ones(7), ones(7), [Demand(1,6,1.0)]))
 julia> ne(pb)
-7
+14
 ```
 """
 Graphs.ne(pb::MCF) = ne(pb.graph)
@@ -106,13 +106,14 @@ Returns a `(nv(pb), nv(pb))` matrix with elements equal to edge features corresp
 julia> pb = MCF(grid((3,2)), ones(7), 2*ones(7), [Demand(1,6,1.0)]);
 
 julia> weight_matrix(pb)
-6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 7 stored entries:
+6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 14 stored entries:
   ⋅   1.0   ⋅   1.0   ⋅    ⋅
+ 1.0   ⋅   1.0   ⋅   1.0   ⋅
+  ⋅   1.0   ⋅    ⋅    ⋅   1.0
+ 1.0   ⋅    ⋅    ⋅   1.0   ⋅
+  ⋅   1.0   ⋅   1.0   ⋅   1.0
   ⋅    ⋅   1.0   ⋅   1.0   ⋅
-  ⋅    ⋅    ⋅    ⋅    ⋅   1.0
-  ⋅    ⋅    ⋅    ⋅   1.0   ⋅
-  ⋅    ⋅    ⋅    ⋅    ⋅   1.0
-  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅
+
 
 ```
 """
@@ -126,13 +127,14 @@ Return a sparse matrix with dimension `(nv(pb), nv(pb))` with values equal to ar
 # Examples
 ```jldoctest; setup = :(using Graphs; pb = MCF(grid((3,2)), ones(7), 2*ones(7), [Demand(1,6,1.0)]))
 julia> cost_matrix(pb)
-6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 7 stored entries:
-  ⋅   1.0   ⋅   1.0   ⋅    ⋅
-  ⋅    ⋅   1.0   ⋅   1.0   ⋅
-  ⋅    ⋅    ⋅    ⋅    ⋅   1.0
-  ⋅    ⋅    ⋅    ⋅   1.0   ⋅
-  ⋅    ⋅    ⋅    ⋅    ⋅   1.0
-  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅
+6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 14 stored entries:
+  ⋅   1.0   ⋅   1.0   ⋅    ⋅ 
+ 1.0   ⋅   1.0   ⋅   1.0   ⋅ 
+  ⋅   1.0   ⋅    ⋅    ⋅   1.0
+ 1.0   ⋅    ⋅    ⋅   1.0   ⋅ 
+  ⋅   1.0   ⋅   1.0   ⋅   1.0
+  ⋅    ⋅   1.0   ⋅   1.0   ⋅ 
+
 ```
 
 """
@@ -146,13 +148,14 @@ Return a sparse matrix with dimension `(nv(pb), nv(pb))` with values equal to ar
 # Examples
 ```jldoctest; setup = :(using Graphs; pb = MCF(grid((3,2)), ones(7), 2*ones(7), [Demand(1,6,1.0)]))
 julia> capacity_matrix(pb)
-6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 7 stored entries:
+6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 14 stored entries:
   ⋅   2.0   ⋅   2.0   ⋅    ⋅
+ 2.0   ⋅   2.0   ⋅   2.0   ⋅
+  ⋅   2.0   ⋅    ⋅    ⋅   2.0
+ 2.0   ⋅    ⋅    ⋅   2.0   ⋅
+  ⋅   2.0   ⋅   2.0   ⋅   2.0
   ⋅    ⋅   2.0   ⋅   2.0   ⋅
-  ⋅    ⋅    ⋅    ⋅    ⋅   2.0
-  ⋅    ⋅    ⋅    ⋅   2.0   ⋅
-  ⋅    ⋅    ⋅    ⋅    ⋅   2.0
-  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅
+
 ```
 
 """
@@ -183,26 +186,28 @@ Return a new MCF instance with costs scaled by a `cost_factor`, capacity and dem
 # Example
 ```jldoctest; setup = :(using Graphs; pb = MCF(grid((3,2)), ones(7), 2*ones(7), [Demand(1,6,1.0)]))
 julia> pb1 = scale(pb, 1.5, 3)
-MCF(nv = 6, ne = 7, nk = 1)
+MCF(nv = 6, ne = 14, nk = 1)
 	Demand{Int64, Float64}(1, 6, 3.0)
 
 julia> cost_matrix(pb1)
-6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 7 stored entries:
+6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 14 stored entries:
   ⋅   1.5   ⋅   1.5   ⋅    ⋅
+ 1.5   ⋅   1.5   ⋅   1.5   ⋅
+  ⋅   1.5   ⋅    ⋅    ⋅   1.5
+ 1.5   ⋅    ⋅    ⋅   1.5   ⋅
+  ⋅   1.5   ⋅   1.5   ⋅   1.5
   ⋅    ⋅   1.5   ⋅   1.5   ⋅
-  ⋅    ⋅    ⋅    ⋅    ⋅   1.5
-  ⋅    ⋅    ⋅    ⋅   1.5   ⋅
-  ⋅    ⋅    ⋅    ⋅    ⋅   1.5
-  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅
+
 
 julia> capacity_matrix(pb1)
-6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 7 stored entries:
-  ⋅   6.0   ⋅   6.0   ⋅    ⋅ 
-  ⋅    ⋅   6.0   ⋅   6.0   ⋅ 
-  ⋅    ⋅    ⋅    ⋅    ⋅   6.0
-  ⋅    ⋅    ⋅    ⋅   6.0   ⋅ 
-  ⋅    ⋅    ⋅    ⋅    ⋅   6.0
-  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅ 
+6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 14 stored entries:
+  ⋅   6.0   ⋅   6.0   ⋅    ⋅
+ 6.0   ⋅   6.0   ⋅   6.0   ⋅
+  ⋅   6.0   ⋅    ⋅    ⋅   6.0
+ 6.0   ⋅    ⋅    ⋅   6.0   ⋅
+  ⋅   6.0   ⋅   6.0   ⋅   6.0
+  ⋅    ⋅   6.0   ⋅   6.0   ⋅
+
 ```
 """
 function scale(pb::MCF{T,N}, cost_factor=1.0, capacity_factor=1.0) where {T,N}
@@ -220,30 +225,31 @@ Normalize MCF instance. Costs are scaled by `1 / max(pb.cost)`, capacity and dem
 # Example
 ```jldoctest; setup = :(using Graphs)
 julia> pb = MCF(grid((3,2)), collect(1.0:7.0), collect(0.0:2:13.0), [Demand(1,6,10.0)])
-MCF(nv = 6, ne = 7, nk = 1)
+MCF(nv = 6, ne = 14, nk = 1)
 	Demand{Int64, Float64}(1, 6, 10.0)
 
 julia> pbn = normalize(pb)
-MCF(nv = 6, ne = 7, nk = 1)
+MCF(nv = 6, ne = 14, nk = 1)
 	Demand{Int64, Float64}(1, 6, 0.8333333333333333)
 
 julia> cost_matrix(pbn)
-6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 7 stored entries:
-  ⋅   0.142857   ⋅        0.285714   ⋅         ⋅
-  ⋅    ⋅        0.428571   ⋅        0.571429   ⋅
-  ⋅    ⋅         ⋅         ⋅         ⋅        0.714286
-  ⋅    ⋅         ⋅         ⋅        0.857143   ⋅
-  ⋅    ⋅         ⋅         ⋅         ⋅        1.0
-  ⋅    ⋅         ⋅         ⋅         ⋅         ⋅
+6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 14 stored entries:
+  ⋅        0.142857   ⋅        0.285714   ⋅         ⋅ 
+ 0.142857   ⋅        0.428571   ⋅        0.571429   ⋅ 
+  ⋅        0.428571   ⋅         ⋅         ⋅        0.714286
+ 0.285714   ⋅         ⋅         ⋅        0.857143   ⋅ 
+  ⋅        0.571429   ⋅        0.857143   ⋅        1.0
+  ⋅         ⋅        0.714286   ⋅        1.0        ⋅ 
 
 julia> capacity_matrix(pbn)
-6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 7 stored entries:
-  ⋅   0.0   ⋅        0.166667   ⋅         ⋅
-  ⋅    ⋅   0.333333   ⋅        0.5        ⋅
-  ⋅    ⋅    ⋅         ⋅         ⋅        0.666667
-  ⋅    ⋅    ⋅         ⋅        0.833333   ⋅
-  ⋅    ⋅    ⋅         ⋅         ⋅        1.0
-  ⋅    ⋅    ⋅         ⋅         ⋅         ⋅
+6×6 SparseArrays.SparseMatrixCSC{Float64, Int64} with 14 stored entries:
+  ⋅        0.0        ⋅        0.166667   ⋅         ⋅ 
+ 0.0        ⋅        0.333333   ⋅        0.5        ⋅ 
+  ⋅        0.333333   ⋅         ⋅         ⋅        0.666667
+ 0.166667   ⋅         ⋅         ⋅        0.833333   ⋅ 
+  ⋅        0.5        ⋅        0.833333   ⋅        1.0
+  ⋅         ⋅        0.666667   ⋅        1.0        ⋅ 
+
 ```
 """
 function normalize(pb::MCF)

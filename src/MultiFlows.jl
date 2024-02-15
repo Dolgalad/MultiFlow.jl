@@ -8,7 +8,7 @@ module MultiFlows
 using DataFrames
 using CSV
 using Graphs
-import Graphs: nv, ne, edges
+import Graphs: nv, ne, edges, add_edge!, weights
 using SimpleWeightedGraphs
 using SparseArrays
 
@@ -25,6 +25,11 @@ export
     double_edges!,
     edge_features,
     edge_index_matrix,
+    # Paths
+    VertexPath,
+    path_weight,
+    edge_indices,
+    is_path,
     # MCF
     Demand,
     MCF,
@@ -34,6 +39,8 @@ export
     scale_demands,
     scale,
     normalize,
+    # MCF solutions
+    MCFSolution,
     # reading/writing
     load,
     load_csv,
