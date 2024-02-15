@@ -29,9 +29,9 @@ For each ``k \in K`` we defined ``P^k`` the set of ``s_k-t_k``-paths composed of
 &\sum\limits_{k\in K} \sum\limits_{p\in P^k_a} b_k x_p^k \leq c_a & \forall a \in A  & (7)\\
 &x_p^k \in [0, 1] & \forall k\in K, p\in P^k & (8)
 \end{aligned}
+```
 
 Constraint ``(6)`` ensures that the totality of ``b_k`` is routed and ``(7)`` that the edge capacities are not exceeded.
-```
 
 ## Index
 

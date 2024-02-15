@@ -41,6 +41,7 @@ export
     normalize,
     # MCF solutions
     MCFSolution,
+    is_solution,
     # reading/writing
     load,
     load_csv,
