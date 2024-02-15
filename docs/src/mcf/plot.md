@@ -19,14 +19,14 @@ julia> draw(PNG("test1.png", 16cm, 16cm), mcfplot(pb))
 ## Index
 
 ```@index
-Pages = ["mcf_plot.md"]
+Pages = ["plot.md"]
 ```
 
 ## Full docs
 
 ```@autodocs
 Modules = [MultiFlows]
-Pages = ["mcf_plot.jl"]
+Pages = ["plot.jl"]
 
 ```
 

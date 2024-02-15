@@ -3,7 +3,7 @@
 ## Index
 
 ```@index
-Pages = ["mcf_io.md"]
+Pages = ["io.md"]
 ```
 
 ## MCF file formats
@@ -86,7 +86,7 @@ This will create two files : `path_to_instance/link.csv` and `path_to_instance/s
 
 ```@autodocs
 Modules = [MultiFlows]
-Pages = ["mcf_io.jl"]
+Pages = ["io.jl"]
 
 ```
 

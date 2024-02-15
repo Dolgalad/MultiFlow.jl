@@ -17,11 +17,12 @@ pages_files = [
     ],
     "Core API" => [
         "core_functions/feature_graph.md",
-        "core_functions/mcf.md",
-        "core_functions/mcf_io.md",
-        "core_functions/mcf_plot.md",
-
     ],
+    "Multi-Commodity Flows" => [
+        "mcf/mcf.md",
+        "mcf/io.md",
+        "mcf/plot.md",
+    ]
 ]
 
 pages = [

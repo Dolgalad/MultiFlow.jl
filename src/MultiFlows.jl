@@ -40,10 +40,10 @@ export
 
 #MultiFlows
 include("feature_graph.jl")
-include("demand.jl")
-include("mcf.jl")
-include("mcf_io.jl")
-include("mcf_plot.jl")
+include("mcf/demand.jl")
+include("mcf/mcf.jl")
+include("mcf/io.jl")
+include("mcf/plot.jl")
 #include("paths.jl")
 #include("graph_utils.jl")
 
