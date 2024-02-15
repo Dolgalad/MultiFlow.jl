@@ -319,3 +319,24 @@ true
 function capacities(pb::MCF)
     return edge_features(pb.graph, 2)
 end
+
+"""
+    demands(pb::MCF{T,N}, s::T, t::T)
+
+Get demands with origin and destination `s,t`.
+
+# Example
+```jldoctest; setup = :(using Graphs; pb = MCF(grid((3,2)), ones(14), ones(14), [Demand(1,2,1.)]))
+julia> demands(pb, 1, 2)
+1-element Vector{Demand{Int64, Float64}}:
+ Demand{Int64, Float64}(1, 2, 1.0)
+
+julia> demands(pb, 2, 1)
+Demand{Int64, Float64}[]
+
+```
+
+"""
+function demands(pb::MCF{T,N}, s::T, t::T) where {T,N}
+    return [d for d in pb.demands if d.src==s && d.dst==t]
+end

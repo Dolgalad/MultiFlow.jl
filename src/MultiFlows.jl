@@ -42,6 +42,7 @@ export
     has_demand,
     costs,
     capacities,
+    demands,
     # MCF solutions
     MCFSolution,
     is_solution,
