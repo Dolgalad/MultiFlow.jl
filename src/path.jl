@@ -154,6 +154,24 @@ true
 """
 is_path(p::VertexPath{T}, s::T, t::T) where {T} = p.vertices[1]==s && p.vertices[end]==t
 
+"""
+    Graphs.has_edge(p::VertexPath{T}, s::T, t::T) where {T}
+
+Check if the path contains edge `(s,t)`.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> p = VertexPath([1,2,3]);
+
+julia> has_edge(p, 1, 2)
+true
+
+julia> has_edge(p, 1, 3)
+false
+```
+"""
+Graphs.has_edge(p::VertexPath{T}, s::T, t::T) where {T} = (s,t) in edges(p)
+
 #"""
 #    EdgeIndexPath
 #

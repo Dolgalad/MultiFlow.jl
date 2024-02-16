@@ -191,3 +191,86 @@ function objective_value(sol::MCFSolution, pb::MCF)
     return sum(pb.demands[k].amount * sum(sol.flows[k][i] * path_weight(sol.paths[k][i], pb.graph) for i in 1:length(sol.flows[k])) for k in 1:nk(pb) if !Base.isempty(sol.paths[k]))
 end
 
+"""
+    paths(sol::MCFSolution)
+
+Return all paths used in the solution with non-zero flow.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> sol = MCFSolution([[VertexPath([1,2]), VertexPath([1,4,5,2])]], [[.5, .5]]);
+
+julia> paths(sol)
+2-element Vector{VertexPath{Int64}}:
+ VertexPath{Int64}([1, 2])
+ VertexPath{Int64}([1, 4, 5, 2])
+
+```
+"""
+function paths(sol::MCFSolution)
+    return vcat([[sol.paths[k][i] for i in 1:length(sol.paths[k]) if sol.flows[k][i]>0] for k in 1:length(sol.paths)]...)
+end
+
+"""
+    paths(sol::MCFSolution, k::Int64)
+
+Return paths used in the solution with non-zero flow for demand `k`.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> sol = MCFSolution([[VertexPath([1,2])], [VertexPath([1,4,5,2])]], [[.5], [.5]]);
+
+julia> paths(sol, 1)
+1-element Vector{VertexPath{Int64}}:
+ VertexPath{Int64}([1, 2])
+
+```
+"""
+function paths(sol::MCFSolution, k::Int64)
+    return [sol.paths[k][i] for i in 1:length(sol.paths[k]) if sol.flows[k][i]>0]
+end
+
+
+"""
+    Graphs.has_edge(sol::MCFSolution, s::T, t::T) where {T}
+
+Check if the solution uses edge `(s,t)`.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> sol = MCFSolution([[VertexPath([1,2])], [VertexPath([1,4,5,2])]], [[.5], [.5]]);
+
+julia> has_edge(sol, 1, 2)
+true
+
+julia> has_edge(sol, 5, 4)
+false
+
+```
+
+"""
+function Graphs.has_edge(sol::MCFSolution, s::T, t::T) where {T}
+    return any([has_edge(p, s, t) for p in paths(sol)])
+end
+
+"""
+    Graphs.has_edge(sol::MCFSolution, k::Int64, s::T, t::T) where {T}
+
+Check if the solution uses edge `(s,t)` for demand `k`.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> sol = MCFSolution([[VertexPath([1,2])], [VertexPath([1,4,5,2])]], [[.5], [.5]]);
+
+julia> has_edge(sol, 1, 1, 2)
+true
+
+julia> has_edge(sol, 1, 5, 4)
+false
+
+```
+
+"""
+function Graphs.has_edge(sol::MCFSolution, k::Int64, s::T, t::T) where {T}
+    return any([has_edge(p, s, t) for p in paths(sol, k)])
+end

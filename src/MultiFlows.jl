@@ -50,6 +50,7 @@ export
     is_feasible,
     used_capacity,
     objective_value,
+    paths,
     # reading/writing
     load,
     load_csv,
@@ -57,6 +58,7 @@ export
     is_instance_dir,
     # plotting
     mcfplot,
+    mcfsolplot,
     # heuristic solver
     solve_shortest_paths
 
