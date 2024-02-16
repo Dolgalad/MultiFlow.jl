@@ -4,7 +4,7 @@ _MultiFlows.jl_ offers the `MCF` interface for creating Multi-Commodity Flow pro
 
 ## Formulation
 
-### Arc-flow ormulation
+### Arc-flow formulation
 
 The problem is defined on a directed graph ``G = (V, A)`` with edge costs ``r_a \in \mathbb{R}^+`` and capacities ``c_a \in \mathbb{R}^+``. We are given a set of demands ``K`` with each demand having an origin and destination ``s_k, t_k \in V`` and an amount ``b_k \in \mathbb{R}^+``. Denoting by ``x_a^k \in [0, 1]`` the amount of flow for demand ``k`` circulating through edge ``a`` the problem can be written : 
 
