@@ -1,6 +1,6 @@
 using JuMP
-using CPLEX
-
+#using CPLEX
+using HiGHS
 
 """
     flow_constraint_rhs(pb::MCF, v::Int64, k::Int64, model::JuMP.Model, max_acceptance::Bool=false)
@@ -91,7 +91,7 @@ function create_compact_model(pb::MCF;
                               max_acceptance::Bool=false,
                               verbose::Bool=false
     )
-    model = Model(CPLEX.Optimizer)
+    model = Model(HiGHS.Optimizer)
     if !verbose
         set_silent(model)
     end
