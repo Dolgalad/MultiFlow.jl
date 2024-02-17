@@ -24,7 +24,6 @@ pages_files = [
         "mcf/plot.md",
         "mcf/heuristic_solver.md",
         "mcf/compact_solver.md",
-
     ]
 ]
 

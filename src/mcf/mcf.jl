@@ -341,4 +341,25 @@ function demands(pb::MCF{T,N}, s::T, t::T) where {T,N}
     return [d for d in pb.demands if d.src==s && d.dst==t]
 end
 
+"""
+    add_demand!(pb::MCF{T,N}, demand::Demand{N}) where {T,N}
 
+Add a demand to the problem.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), ones(7), ones(7), Demand{Int64,Float64}[])
+MCF(nv = 6, ne = 14, nk = 0)
+
+julia> add_demand!(pb, Demand(1, 2, 1.0))
+1-element Vector{Demand{Int64, Float64}}:
+ Demand{Int64, Float64}(1, 2, 1.0)
+
+julia> pb
+MCF(nv = 6, ne = 14, nk = 1)
+	Demand{Int64, Float64}(1, 2, 1.0)
+
+"""
+function add_demand!(pb::MCF{T,N}, demand::Demand{T,N}) where {T,N}
+    push!(pb.demands, demand)
+end

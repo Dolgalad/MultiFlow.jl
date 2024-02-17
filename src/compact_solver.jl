@@ -143,11 +143,14 @@ MCFSolution
 
 ```
 """
-function solve_compact(pb::MCF)
-    model = create_compact_model(pb)
+function solve_compact(pb::MCF; max_acceptance::Bool=false)
+    model = create_compact_model(pb, max_acceptance=max_acceptance)
     optimize!(model)
-    if termination_status(model)==OPTIMAL
+    tstatus = termination_status(model)
+    if tstatus==OPTIMAL
         return solution_from_arc_flow_values(value.(model[:x]), pb)
+    elseif tstatus==INFEASIBLE
+        throw(ErrorException("Infeasible problem"))
     end
     return nothing
 end
