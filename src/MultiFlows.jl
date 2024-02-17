@@ -51,6 +51,8 @@ export
     used_capacity,
     objective_value,
     paths,
+    paths_from_arc_flow_values,
+    solution_from_arc_flow_values,
     # reading/writing
     load,
     load_csv,
@@ -60,7 +62,9 @@ export
     mcfplot,
     mcfsolplot,
     # heuristic solver
-    solve_shortest_paths
+    solve_shortest_paths,
+    # compact solver
+    solve_compact
 
 #MultiFlows
 include("feature_graph.jl")

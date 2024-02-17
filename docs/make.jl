@@ -22,7 +22,7 @@ pages_files = [
         "mcf/mcf.md",
         "mcf/io.md",
         "mcf/plot.md",
-        "mcf/heuristic_solver.md",
+        "mcf/solver.md",
     ]
 ]
 

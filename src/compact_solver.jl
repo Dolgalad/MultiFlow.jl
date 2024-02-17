@@ -124,12 +124,30 @@ end
     solve_compact(pb::MCF)
 
 Solve the compact formulation with state of the art solver.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> gr = grid((3,3));
+
+julia> pb = MCF(gr, ones(ne(gr)), ones(ne(gr)), [Demand(1,9,1.0), Demand(1,6,1.0)])
+MCF(nv = 9, ne = 24, nk = 2)
+	Demand{Int64, Float64}(1, 9, 1.0)
+	Demand{Int64, Float64}(1, 6, 1.0)
+
+julia> solve_compact(pb)
+MCFSolution
+	Demand k = 1
+		1.0 on VertexPath{Int64}([1, 2, 5, 8, 9])
+	Demand k = 2
+		1.0 on VertexPath{Int64}([1, 4, 5, 6])
+
+```
 """
 function solve_compact(pb::MCF)
     model = create_compact_model(pb)
     optimize!(model)
-    if termination_statue(model)==OPTIMAL
-        return value.(model[:x])
+    if termination_status(model)==OPTIMAL
+        return solution_from_arc_flow_values(value.(model[:x]), pb)
     end
     return nothing
 end

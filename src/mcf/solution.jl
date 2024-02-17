@@ -274,3 +274,88 @@ false
 function Graphs.has_edge(sol::MCFSolution, k::Int64, s::T, t::T) where {T}
     return any([has_edge(p, s, t) for p in paths(sol, k)])
 end
+
+"""
+    paths_from_arc_flow_values(x::Vector, k::Int64, pb::MCF)
+
+Compute paths and flows from arc flow values.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), ones(14), ones(14), [Demand(1,2,2.)]);
+
+julia> sol = MCFSolution([[VertexPath([1,4,5,2])]], [[1.]]);
+
+julia> x = arc_flow_value(sol, pb)
+1×14 Matrix{Float64}:
+ 0.0  1.0  0.0  0.0  0.0  1.0  0.0  0.0  0.0  0.0  1.0  0.0  0.0  0.0
+
+julia> paths_from_arc_flow_values(x[1,:], 1, pb)
+(VertexPath[VertexPath{Int64}([1, 4, 5, 2])], [1.0])
+```
+  
+"""
+function paths_from_arc_flow_values(x::Vector, k::Int64, pb::MCF)
+    arc_flows = copy(x)
+    demand = pb.demands[k]
+    temp_costs = Float64.(costs(pb))
+    M = typemax(eltype(temp_costs))
+    #println("cost type ", eltype(temp_costs), ", ", M)
+    temp_costs[arc_flows .== 0] .= M
+    paths = VertexPath[]
+    flows = Float64[]
+    while !all(temp_costs .== M)
+        g = SimpleWeightedDiGraph(pb.graph.srcnodes, pb.graph.dstnodes, temp_costs)
+        p = VertexPath(enumerate_paths(dijkstra_shortest_paths(g, demand.src), demand.dst))
+        if Base.isempty(p)
+            break
+        end
+        # get flow
+        path_flow = minimum(arc_flows[edge_indices(p, pb.graph)])
+        push!(paths, p)
+        push!(flows, path_flow)
+        # update the arc flow vector
+        arc_flows[edge_indices(p, pb.graph)] .-= path_flow
+        temp_costs[arc_flows .== 0] .= M
+        #println(sum(temp_costs .== M))
+    end
+    return paths, flows
+end
+
+"""
+    from_arc_flow_values(x::AbstractMatrix{Float64}, pb::MCF)
+
+Compute solution paths from ``x_a^k`` values.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), ones(14), ones(14), [Demand(1,2,2.)]);
+
+julia> sol = MCFSolution([[VertexPath([1,4,5,2])]], [[1.]]);
+
+julia> x = arc_flow_value(sol, pb)
+1×14 Matrix{Float64}:
+ 0.0  1.0  0.0  0.0  0.0  1.0  0.0  0.0  0.0  0.0  1.0  0.0  0.0  0.0
+
+julia> solution_from_arc_flow_values(x, pb)
+MCFSolution
+	Demand k = 1
+		1.0 on VertexPath{Int64}([1, 4, 5, 2])
+
+```
+ 
+"""
+function solution_from_arc_flow_values(x::AbstractMatrix{Float64}, pb::MCF)
+    # check dimension
+    if size(x) != (nk(pb), ne(pb))
+        throw(DimensionMismatch("Solution dimension does not match problem. Expected $((nk(pb), ne(pb))) and got $(size(x))"))
+    end
+    sol_paths, sol_flows = [], []
+    for k in 1:nk(pb)
+        # get paths from vector of arc-flows
+        paths, flows = paths_from_arc_flow_values(x[k,:], k, pb)
+        push!(sol_paths, paths)
+        push!(sol_flows, flows)
+    end
+    return MCFSolution(sol_paths, sol_flows)
+end
