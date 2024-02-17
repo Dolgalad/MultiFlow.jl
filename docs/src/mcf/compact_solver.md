@@ -9,13 +9,13 @@ pb = MCF(g, ones(ne(g)), ones(ne(g)), [Demand(1,9,1.0), Demand(1,6,1.0)])
 draw(PNG("grid3x3_problem.png", 16cm, 16cm), mcfplot(pb, loc_x, loc_y))
 
 # default config
-sol = solve_compact(pb)
+sol, ss = solve_compact(pb)
 draw(PNG("grid3x3_solution.png", 16cm, 16cm), mcfsolplot(sol, pb, loc_x, loc_y))
 
 # max acceptance
 add_demand!(pb, Demand(1,7,1.0))
 draw(PNG("grid3x3_problem_1.png", 16cm, 16cm), mcfplot(pb, loc_x, loc_y))
-sol = solve_compact(pb, max_acceptance=true)
+sol, ss = solve_compact(pb, max_acceptance=true)
 draw(PNG("grid3x3_solution_ma.png", 16cm, 16cm), mcfsolplot(sol, pb, loc_x, loc_y))
 ```
 

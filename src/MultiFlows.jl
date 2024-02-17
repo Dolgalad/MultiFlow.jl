@@ -62,6 +62,8 @@ export
     # plotting
     mcfplot,
     mcfsolplot,
+    # solver statistics
+    SolverStatistics,
     # heuristic solver
     solve_shortest_paths,
     # compact solver
@@ -77,6 +79,7 @@ include("mcf/io.jl")
 include("mcf/plot.jl")
 include("mcf/heuristic_solver.jl")
 include("compact_solver.jl")
+include("solver_stats.jl")
 #include("graph_utils.jl")
 
 end # module MultiFlows

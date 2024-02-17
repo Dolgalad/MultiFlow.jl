@@ -123,10 +123,10 @@ end
 """
     solve_compact(pb::MCF)
 
-Solve the compact formulation with state of the art solver.
+Solve the compact formulation with state of the art solver. Returns a tuple `(MCFSolution, SolverStatistics)`.
 
 # Example
-```jldoctest; setup = :(using Graphs)
+```jldoctest; setup = :(using Graphs), filter = r"[0-9.]+"
 julia> gr = grid((3,3));
 
 julia> pb = MCF(gr, ones(ne(gr)), ones(ne(gr)), [Demand(1,9,1.0), Demand(1,6,1.0)])
@@ -134,21 +134,44 @@ MCF(nv = 9, ne = 24, nk = 2)
 	Demand{Int64, Float64}(1, 9, 1.0)
 	Demand{Int64, Float64}(1, 6, 1.0)
 
-julia> solve_compact(pb)
+julia> sol, ss = solve_compact(pb);
+
+julia> sol
 MCFSolution
 	Demand k = 1
 		1.0 on VertexPath{Int64}([1, 2, 5, 8, 9])
 	Demand k = 2
 		1.0 on VertexPath{Int64}([1, 4, 5, 6])
 
+julia> ss
+{
+    "solve_time": 0.00042557716369628906,
+    "objective_sense": "MIN_SENSE",
+    "dual_objective_value": 7.0,
+    "result_count": 1,
+    "node_count": -1,
+    "objective_value": 7.0,
+    "objective_bound": 0.0,
+    "termination_status": "OPTIMAL",
+    "simplex_iterations": 10,
+    "barrier_iterations": 0,
+    "dual_status": "FEASIBLE_POINT",
+    "primal_status": "FEASIBLE_POINT",
+    "solver_name": "HiGHS",
+    "relative_gap": null
+}
+
 ```
+
 """
 function solve_compact(pb::MCF; max_acceptance::Bool=false)
     model = create_compact_model(pb, max_acceptance=max_acceptance)
     optimize!(model)
     tstatus = termination_status(model)
     if tstatus==OPTIMAL
-        return solution_from_arc_flow_values(value.(model[:x]), pb)
+        stats = SolverStatistics()
+        add_JuMP_statistics(stats, model)
+        return solution_from_arc_flow_values(value.(model[:x]), pb), stats
     elseif tstatus==INFEASIBLE
         throw(ErrorException("Infeasible problem"))
     end
