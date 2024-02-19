@@ -22,11 +22,12 @@ pages_files = [
         "mcf/mcf.md",
         "mcf/io.md",
         "mcf/plot.md",
-        "mcf/heuristic_solver.md",
-        "mcf/compact_solver.md",
     ],
     "Solvers" => [
         "solvers/solver_statistics.md",
+        "solvers/heuristic_solver.md",
+        "solvers/compact_solver.md",
+        "solvers/column_generation.md",
     ]
 ]
 
@@ -38,6 +39,7 @@ pages = [
 ]
 
 DocMeta.setdocmeta!(MultiFlows, :DocTestSetup, :(using MultiFlows); recursive=true) 
+
 makedocs(
            sitename="MultiFlows.jl", 
            format = Documenter.HTML(prettyurls = false),

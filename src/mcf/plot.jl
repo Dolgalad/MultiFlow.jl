@@ -62,7 +62,6 @@ function mcfplot(pb::MCF, loc_x::Vector{Float64}, loc_y::Vector{Float64};
         # get demands
         demds = demands(pb, src(e), dst(e))
         if !Base.isempty(demds)
-            println("Demand on edge ", e)
             demand_edge_flag_map[src(e), dst(e)] = 2
             #push!(demand_edge_flag, 2)
             amount = min(max_edge_capacity, max(edge_capacities[i], sum([d.amount for d in demds])))
@@ -77,7 +76,6 @@ function mcfplot(pb::MCF, loc_x::Vector{Float64}, loc_y::Vector{Float64};
     end
     for d in pb.demands
         if !has_edge(g, d.src, d.dst)
-            println("adding demand edge ", (d.src, d.dst))
             # add edge and mark as demand edge
             add_edge!(g, d.src, d.dst)
             #push!(demand_edge_flag, 2)

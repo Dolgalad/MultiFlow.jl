@@ -88,7 +88,7 @@ Pages = ["compact_solver.md"]
 
 ```@autodocs
 Modules = [MultiFlows]
-Pages = ["compact_solver.jl"]
+Pages = ["compact.jl"]
 
 ```
 

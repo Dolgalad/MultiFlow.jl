@@ -45,7 +45,7 @@ Pages = ["heuristic_solver.md"]
 
 ```@autodocs
 Modules = [MultiFlows]
-Pages = ["heuristic_solver.jl"]
+Pages = ["heuristic.jl"]
 
 ```
 

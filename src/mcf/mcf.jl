@@ -363,3 +363,24 @@ MCF(nv = 6, ne = 14, nk = 1)
 function add_demand!(pb::MCF{T,N}, demand::Demand{T,N}) where {T,N}
     push!(pb.demands, demand)
 end
+
+"""
+    demand_amounts(pb::MCF)
+
+Return a vector of the demand amounts.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), ones(7), ones(7), [Demand(1,2,1.), Demand(1,3,.5)]);
+
+julia> demand_amounts(pb)
+2-element Vector{Float64}:
+ 1.0
+ 0.5
+```
+
+
+"""
+function demand_amounts(pb::MCF)
+    return [d.amount for d in pb.demands]
+end

@@ -11,6 +11,7 @@ using Graphs
 import Graphs: nv, ne, edges, add_edge!, weights
 using SimpleWeightedGraphs
 using SparseArrays
+using JuMP
 
 export 
     # Feature graph
@@ -44,6 +45,7 @@ export
     capacities,
     demands,
     add_demand!,
+    demand_amounts,
     # MCF solutions
     MCFSolution,
     is_solution,
@@ -67,7 +69,15 @@ export
     # heuristic solver
     solve_shortest_paths,
     # compact solver
-    solve_compact
+    solve_compact,
+    # column generation
+    MCFRestrictedMasterProblem,
+    MCFPricingProblem,
+    solve!,
+    add_column!,
+    update_pricing_problem!,
+    solve_column_generation
+
 
 #MultiFlows
 include("feature_graph.jl")
@@ -77,9 +87,9 @@ include("mcf/mcf.jl")
 include("mcf/solution.jl")
 include("mcf/io.jl")
 include("mcf/plot.jl")
-include("mcf/heuristic_solver.jl")
-include("compact_solver.jl")
 include("solver_stats.jl")
-#include("graph_utils.jl")
+include("solvers/heuristic.jl")
+include("solvers/compact.jl")
+include("solvers/column_generation.jl")
 
 end # module MultiFlows
