@@ -172,6 +172,41 @@ false
 """
 Graphs.has_edge(p::VertexPath{T}, s::T, t::T) where {T} = (s,t) in edges(p)
 
+
+"""
+    path_from_edge_indices(ei::Vector{Int64}, g::AbstractGraph)
+
+Convert a list of edge indices to a path in graph `g`.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> g = grid((3,3))
+{9, 12} undirected simple Int64 graph
+
+julia> p = VertexPath(enumerate_paths(dijkstra_shortest_paths(g, 1), 9))
+VertexPath{Int64}([1, 2, 5, 6, 9])
+
+julia> ei = edge_indices(p, g)
+4-element Vector{Int64}:
+  1
+  4
+  8
+ 10
+
+julia> path_from_edge_indices(ei, g)
+VertexPath{Int64}([1, 2, 5, 6, 9])
+
+```
+"""
+function path_from_edge_indices(ei::Vector{Int64}, g::AbstractGraph)
+    elst = collect(edges(g))
+    p = [src(elst[ei[1]])]
+    for eidx in ei
+        push!(p, dst(elst[eidx]))
+    end
+    return VertexPath(p)
+end
+
 #"""
 #    EdgeIndexPath
 #

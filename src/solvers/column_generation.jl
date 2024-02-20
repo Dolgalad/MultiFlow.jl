@@ -259,6 +259,26 @@ function solve!(prp::MCFPricingProblem)
 end
 
 """
+    solution_from_rmp(rmp::MCFRestrictedMasterProblem, pb::MCF)
+
+Extract solution to the MCF problem `pb` from the solution of the RMP.
+"""
+function solution_from_rmp(rmp::MCFRestrictedMasterProblem, pb::MCF)
+    nK = length(rmp.columns)
+    paths = [[] for _ in 1:nK]
+    flows = [[] for _ in 1:nK]
+    for k in 1:nK
+        vars_k = rmp.model[Symbol("x$k")]
+        vars_k_value = value.(vars_k)
+        for cidx in findall(>(0), vars_k_value[2:end])
+            push!(flows[k], vars_k_value[1+cidx])
+            push!(paths[k], path_from_edge_indices(rmp.columns[k][cidx], pb.graph))
+        end
+    end
+    return MCFSolution(paths, flows)
+end
+
+"""
     solve_column_generation(pb::MCF;
                                  max_unchanged::Int64=5,
                                  max_iterations::Int64=100,
@@ -277,7 +297,7 @@ Solve MCF problem using Column Generation. Returns the final RMP and a [`SolverS
 
 # Example
 ```jldoctest; setup = :(using JuMP ; pb = load("../instances/toytests/test1"))
-julia> rmp, ss = solve_column_generation(pb);
+julia> sol, (rmp, ss) = solve_column_generation(pb);
 
 julia> value.(all_variables(rmp.model))
 9-element Vector{Float64}:
@@ -378,5 +398,5 @@ function solve_column_generation(pb::MCF;
     stats["num_cg_iterations"] = num_cg_iterations
     stats["num_columns"] = sum(size(columns,1) for columns in rmp.columns)
 
-    return rmp, stats
+    return solution_from_rmp(rmp, pb), (rmp, stats)
 end

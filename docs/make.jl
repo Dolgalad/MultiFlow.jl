@@ -22,6 +22,7 @@ pages_files = [
     ],
     "Core API" => [
         "core_functions/feature_graph.md",
+        "core_functions/path.md",
     ],
     "Multi-Commodity Flows" => [
         "mcf/mcf.md",
