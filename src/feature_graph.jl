@@ -185,7 +185,7 @@ feature_dim(g::FeatureDiGraph) = size(g.features[1])
 """
     Graphs.add_edge!(g::FeatureDiGraph{T,N}, src::T, dst::T, feat::N}
 
-Add edge to a FeatureDiGraph object going from vertex `src` to `dst` and with features `feat`. Return `true` on success and `false` if graph already has an edge `(src, dst)`. 
+Add edge to a FeatureDiGraph object going from vertex `src` to `dst` and with features `feat`. Return `true` on success and `false` if graph already has an edge `(src, dst)`. If `force=true` the edge is added even if it already exists.
 
 # Examples
 ```jldoctest; setup = :(using Graphs)
@@ -205,12 +205,12 @@ ERROR: DimensionMismatch("Expected feature dimension (2,) got (3,)")
 [...]
 ```
 """
-function Graphs.add_edge!(g::FeatureDiGraph{T,N}, src::T, dst::T, feat::N) where {T<:Number,N}
+function Graphs.add_edge!(g::FeatureDiGraph{T,N}, src::T, dst::T, feat::N; force::Bool=false) where {T<:Number,N}
     # throw error if dimension of the feature is not 1
     if feature_dim(g) != size(feat)
         throw(DimensionMismatch("Expected feature dimension $(feature_dim(g)) got $(size(feat))"))
     end
-    if has_edge(g, src, dst)
+    if has_edge(g, src, dst) && !force
         return false
     end
     push!(g.srcnodes, src)
