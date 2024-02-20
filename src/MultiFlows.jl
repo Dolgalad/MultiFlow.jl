@@ -1,8 +1,3 @@
-"""
-    MultiFlows
-
-MultiFlows package documentation.
-"""
 module MultiFlows
 
 using DataFrames
@@ -31,6 +26,7 @@ export
     path_weight,
     edge_indices,
     is_path,
+    path_from_edge_indices,
     # MCF
     Demand,
     MCF,
