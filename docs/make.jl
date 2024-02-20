@@ -3,6 +3,11 @@ push!(LOAD_PATH,"../src/")
 
 using Documenter, MultiFlows
 
+cp(
+    normpath(@__FILE__, "../../README.md"),
+    normpath(@__FILE__, "../src/index.md");
+    force=true,
+)
 
 function get_title(markdown_file_path::AbstractString)
     first_line = open(markdown_file_path) do io
