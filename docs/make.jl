@@ -64,5 +64,5 @@ makedocs(
 
 deploydocs(
            repo = "github.com/Dolgalad/MultiFlows.jl.git",
-           devbranch = "docs",
+           devbranch = "main",
           )
