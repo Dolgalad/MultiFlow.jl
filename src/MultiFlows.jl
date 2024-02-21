@@ -7,6 +7,7 @@ import Graphs: nv, ne, edges, add_edge!, weights
 using SimpleWeightedGraphs
 using SparseArrays
 using JuMP
+using StatsBase
 
 export 
     # Feature graph
@@ -82,7 +83,9 @@ export
     random_demand_amounts,
     random_demand_endpoints,
     shake,
-    non_saturated_path_exists
+    non_saturated_path_exists,
+    saturate,
+    generate_example
 
 
 #MultiFlows

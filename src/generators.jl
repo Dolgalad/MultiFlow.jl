@@ -179,230 +179,151 @@ function non_saturated_path_exists(sol::MCFSolution, pb::MCF; tol::Float64=1e-8)
     end
     return false
 end
-#
-#function saturate_instance(inst::UMFData; tol=1e-3)
-#    # solve with column generation
-#    (sol, ss) = solveUMF(inst, "CG", "cplex", "./output.txt")
-#    ms = ss.stats["ms"]
-#    # all columns
-#    columns = UMFSolver.allcolumns(ms)
-#    # fractional flow per column
-#    flows = UMFSolver.getx(ms)
-#    # available capacities 
-#    available_caps = available_capacities(inst, ms)
-#    # new bandwidths
-#    new_bdw = copy(inst.bandwidths)
-#    # keep list of demands 
-#    demand_paths = []
-#    for k in eachindex(columns)
-#        for p in eachindex(columns[k])
-#            push!(demand_paths, (k,p))
-#        end
-#    end
-#    demand_paths = Set(demand_paths)
-#
-#    #while non_saturated_path_exists(available_caps, columns, tol=tol)
-#    while !isempty(demand_paths)
-#        (k,p) = rand(demand_paths)
-#        if size(columns[k],1)==0
-#            println("Poping ", (k,p))
-#            pop!(demand_paths, (k,p))
-#            continue
-#        end
-#        #p = rand(1:size(columns[k], 1))
-#        # check if path capacity if greater than 0
-#        s = path_capacity(columns[k][p], available_caps)
-#        if s > tol
-#            if s < 1
-#                bdw_delta = s
-#            else
-#                dist = Uniform(0, s)
-#                bdw_delta = rand(dist)
-#            end
-#            new_bdw[k] += bdw_delta
-#
-#            # update available capacities
-#            for a in columns[k][p]
-#                available_caps[a] -= bdw_delta
-#            end
-#        end
-#        # pop (k,p) if paths are saturated
-#        if path_capacity(columns[k][p], available_caps) < tol
-#            #println("poping : ", (k,p))
-#            pop!(demand_paths, (k,p))
-#        end
-#    end
-#    return UMFData(
-#        inst.name * "_saturated",
-#        inst.srcnodes,
-#        inst.dstnodes,
-#        inst.capacities,
-#        inst.costs,
-#        inst.latencies,
-#        inst.srcdemands,
-#        inst.dstdemands,
-#        new_bdw,
-#        inst.demand_latencies,
-#        numdemands(inst),
-#        numnodes(inst),
-#        numarcs(inst),
-#    )
-#end
-#
-#function generate_example(inst::UMFData; demand_p=.05, bdw_factor=1.05)
-#    ndemands = numdemands(inst)
-#    # shake
-#    inst_t = shake_instance(inst)
-#    # saturate
-#    inst_s = saturate_instance(inst_t)
-#
-#    # increase demand
-#    nselecteddemands = Int64(max(1, trunc(demand_p * ndemands)))
-#    demand_idx = sample(1:ndemands, nselecteddemands, replace=false)
-#    new_bdw = copy(inst_s.bandwidths)
-#    new_bdw[demand_idx] *= bdw_factor
-#    return UMFData(
-#        inst_s.name * "_generated",
-#        inst_s.srcnodes,
-#        inst_s.dstnodes,
-#        inst_s.capacities,
-#        inst_s.costs,
-#        inst_s.latencies,
-#        inst_s.srcdemands,
-#        inst_s.dstdemands,
-#        new_bdw,
-#        inst_s.demand_latencies,
-#        numdemands(inst),
-#        numnodes(inst),
-#        numarcs(inst),
-#    )
-#
-#end
-#
-#"""Generates examples, changes the number of demands
-#"""
-#function generate_example_2(inst::UMFData; demand_p=.05, bdw_factor=1.05, demand_delta_p=0.1)
-#    delta_range = range(floor(Int64, -demand_delta_p * nk(inst)), floor(Int64, demand_delta_p*nk(inst)))
-#    ndemands = numdemands(inst) + rand(delta_range)
-#    # shake
-#    inst_t = shake_instance(inst, ndemands=ndemands)
-#    # saturate
-#    inst_s = saturate_instance(inst_t)
-#
-#    # increase demand
-#    nselecteddemands = Int64(max(1, trunc(demand_p * ndemands)))
-#    demand_idx = sample(1:ndemands, nselecteddemands, replace=false)
-#    new_bdw = copy(inst_s.bandwidths)
-#    new_bdw[demand_idx] *= bdw_factor
-#    return UMFData(
-#        inst_s.name * "_generated",
-#        inst_s.srcnodes,
-#        inst_s.dstnodes,
-#        inst_s.capacities,
-#        inst_s.costs,
-#        inst_s.latencies,
-#        inst_s.srcdemands,
-#        inst_s.dstdemands,
-#        new_bdw,
-#        inst_s.demand_latencies,
-#        numdemands(inst_t),
-#        numnodes(inst_t),
-#        numarcs(inst_t),
-#    )
-#
-#end
-#
-#"""Generates examples, changes the number of demands
-#"""
-#function generate_example_3(inst::UMFData; demand_p=.05, bdw_factor=1.05, demand_delta_p=0.1)
-#    delta_range = range(floor(Int64, -demand_delta_p * nk(inst)), floor(Int64, demand_delta_p*nk(inst)))
-#    ndemands = numdemands(inst) + rand(delta_range)
-#    # shake
-#    inst_t = shake_instance_2(inst, ndemands=ndemands)
-#    # saturate
-#    inst_s = saturate_instance(inst_t)
-#
-#    # increase demand
-#    nselecteddemands = Int64(max(1, trunc(demand_p * ndemands)))
-#    demand_idx = sample(1:ndemands, nselecteddemands, replace=false)
-#    new_bdw = copy(inst_s.bandwidths)
-#    new_bdw[demand_idx] *= bdw_factor
-#    return UMFData(
-#        inst_s.name * "_generated",
-#        inst_s.srcnodes,
-#        inst_s.dstnodes,
-#        inst_s.capacities,
-#        inst_s.costs,
-#        inst_s.latencies,
-#        inst_s.srcdemands,
-#        inst_s.dstdemands,
-#        new_bdw,
-#        inst_s.demand_latencies,
-#        numdemands(inst_t),
-#        numnodes(inst_t),
-#        numarcs(inst_t),
-#    )
-#
-#end
-#
-#"""Generates examples, changes the number of demands
-#"""
-#function generate_example_4(inst::UMFData; demand_p=.05, bdw_factor=1.05, ndemands=numdemands(inst))
-#    # shake
-#    inst_t = shake_instance_2(inst, ndemands=ndemands)
-#    # saturate
-#    inst_s = saturate_instance(inst_t)
-#
-#    # increase demand
-#    nselecteddemands = Int64(max(1, trunc(demand_p * ndemands)))
-#    demand_idx = sample(1:ndemands, nselecteddemands, replace=false)
-#    new_bdw = copy(inst_s.bandwidths)
-#    new_bdw[demand_idx] *= bdw_factor
-#    return UMFData(
-#        inst_s.name * "_generated",
-#        inst_s.srcnodes,
-#        inst_s.dstnodes,
-#        inst_s.capacities,
-#        inst_s.costs,
-#        inst_s.latencies,
-#        inst_s.srcdemands,
-#        inst_s.dstdemands,
-#        new_bdw,
-#        inst_s.demand_latencies,
-#        numdemands(inst_t),
-#        numnodes(inst_t),
-#        numarcs(inst_t),
-#    )
-#
-#end
-#
-#
-#function generate_example_with_aggregated_demands(inst::UMFData; demand_p=.05, bdw_factor=1.05)
-#    # shake
-#    inst_t = shake_instance_with_aggregated_demands(inst)
-#    # saturate
-#    inst_s = saturate_instance(inst_t)
-#
-#    # increase demand
-#    ndemands = numdemands(inst_s)
-#    nselecteddemands = Int64(max(1, trunc(demand_p * ndemands)))
-#    demand_idx = sample(1:ndemands, nselecteddemands, replace=false)
-#    new_bdw = copy(inst_s.bandwidths)
-#    new_bdw[demand_idx] *= bdw_factor
-#    return UMFData(
-#        inst_s.name * "_generated",
-#        inst_s.srcnodes,
-#        inst_s.dstnodes,
-#        inst_s.capacities,
-#        inst_s.costs,
-#        inst_s.srcdemands,
-#        inst_s.dstdemands,
-#        new_bdw,
-#        numdemands(inst_s),
-#        numnodes(inst_s),
-#        numarcs(inst_s),
-#    )
-#
-#end
-#
-#
+
+"""
+    saturate(pb::MCF{T,N}; 
+             tol::Float64=1e-8, 
+             max_iter::Int64=10, 
+             solve_f::Function=solve_column_generation,
+             demand_order_f::Function=identity,
+             amount_delta_f::Function=identity
+    ) where {T,N}
+
+Saturate an MCF instance. Increase the amount of each demand until reaching the maximum capacity of the paths used to route them. `pb` is solved by calls to `solve_f` until the returned solution does not contain a path with zero minimum available capacity. The maximum number of times the solver is called is `max_iter`. Default behaviour is to take the demands in their original order and increase the amount by ``\\min\\limits_{a \\in p_k} \\text{available_capacity}(a)``, changing the `demand_order_f, amount_delta_f` functions lets users modify this scheme. Setting `demand_order_f=shuffle` will randomize the order in which the demands are increased, and `amount_delta_f=ak->rand()*ak` will increase the amount of demand `k` by a random number sampled from ``\\mathcal{U}([0, a_k])`` where ``a_k`` is the available capacity on the path.
+
+This function return a `Tuple{MCF, MCFSolution}` object.
+
+```jldoctest saturate; setup = :(using Graphs, Random, GraphPlot; Random.seed!(123); spring_layout(grid((3,3))); pb=MCF(grid((3,3)), ones(12), ones(12), [Demand(1,2,.5)]); pb=shake(pb, nK=5, origins_destinations=(1:nv(pb),1:nv(pb))))
+julia> pb
+MCF(nv = 9, ne = 24, nk = 5)
+	Demand{Int64, Float64}(9, 5, 0.5)
+	Demand{Int64, Float64}(8, 1, 0.5)
+	Demand{Int64, Float64}(8, 6, 0.5)
+	Demand{Int64, Float64}(8, 7, 0.5)
+	Demand{Int64, Float64}(6, 9, 0.5)
+
+julia> pb_sat, sol_sat = saturate(pb);
+
+julia> pb_sat
+MCF(nv = 9, ne = 24, nk = 5)
+	Demand{Int64, Float64}(9, 5, 1.0)
+	Demand{Int64, Float64}(8, 1, 0.5)
+	Demand{Int64, Float64}(8, 6, 1.0)
+	Demand{Int64, Float64}(8, 7, 0.5)
+	Demand{Int64, Float64}(6, 9, 1.0)
+```
+
+`sol`|`sol` available capacities|`sol_sat` available capacities
+:---:|:---:|:---
+![](grid3x3_nonsat_solution.png)  |  ![](grid3x3_nonsat_capacities.png) |  ![](grid3x3_sat_capacities.png)
+
+
+```jldoctest saturate
+julia> sol,_ = solve_column_generation(pb);
+
+julia> sol_sat,_ = solve_column_generation(pb_sat);
+
+julia> non_saturated_path_exists(sol, pb)
+true
+
+julia> non_saturated_path_exists(sol_sat, pb_sat)
+false
+```
+
+"""
+function saturate(pb::MCF{T,N}; 
+                  tol::Float64=1e-8, 
+                  max_iter::Int64=10, 
+                  solve_f::Function=solve_column_generation,
+                  demand_order_f::Function=identity,
+                  amount_delta_f::Function=identity
+    ) where {T,N}
+    sol = nothing
+    for i in 1:max_iter
+        # solve with column generation
+        sol,_ = solve_column_generation(pb)
+        if !non_saturated_path_exists(sol, pb)
+            return pb, sol
+        end
+        # available capacity
+        avail_cap = available_capacity(sol, pb)
+        # increase amounts for each demand until reaching the maximum available capacity
+        new_demands = Demand{T,N}[]
+        for k in demand_order_f(1:nk(pb))
+            dem = pb.demands[k]
+            amount_delta = 0
+            for p in sol.paths[k]
+                # available capacity
+                d = minimum(avail_cap[edge_indices(p,pb.graph)])
+                amount_delta += d > tol ? amount_delta_f(d) : 0
+                # update the available capacity
+                avail_cap[edge_indices(p,pb.graph)] .-= d
+            end
+            push!(new_demands, Demand(dem.src, dem.dst, dem.amount+amount_delta))
+        end
+        pb = MCF(pb.graph, new_demands)
+    end
+    return pb,sol
+end
+
+"""
+    generate_example(pb::MCF; 
+                     demand_p::Float64=.05, 
+                     amount_factor::Float64=1.05,
+                     nK::Int64=nk(pb),
+                     sample_f::Function=Base.rand,
+                     solve_f::Function=solve_column_generation,
+                     demand_order_f::Function=identity,
+                     amount_delta_f::Function=identity
+
+    )
+
+Generate an example based on instance `pb`. Returns an instance that is the results of applying [`shake`](@ref), [`saturate`](@ref) and then increasing the amount of a randomly chosen set of demands by multiplying its amount by `amout_factor`.
+
+# Example
+```jldoctest; setup = :(using Graphs, Random; Random.seed!(123))
+julia> pb = MCF(grid((3,2)), ones(7), ones(7), [Demand(1,2,1.)]);
+
+julia> generate_example(pb)
+MCF(nv = 6, ne = 14, nk = 1)
+	Demand{Int64, Float64}(1, 2, 1.05)
+
+julia> # change the number of demands
+
+julia> generate_example(pb, nK=10)
+MCF(nv = 6, ne = 14, nk = 10)
+	Demand{Int64, Float64}(1, 2, 1.0)
+	Demand{Int64, Float64}(1, 2, 1.05)
+	Demand{Int64, Float64}(1, 2, 1.0)
+	Demand{Int64, Float64}(1, 2, 1.0)
+	Demand{Int64, Float64}(1, 2, 1.0)
+	Demand{Int64, Float64}(1, 2, 1.0)
+	Demand{Int64, Float64}(1, 2, 1.0)
+	Demand{Int64, Float64}(1, 2, 1.0)
+	Demand{Int64, Float64}(1, 2, 1.0)
+	Demand{Int64, Float64}(1, 2, 1.0)
+
+```
+"""
+function generate_example(pb::MCF; 
+                          demand_p::Float64=.05, 
+                          amount_factor::Float64=1.05,
+                          nK::Int64=nk(pb),
+                          sample_f::Function=Base.rand,
+                          solve_f::Function=solve_column_generation,
+                          demand_order_f::Function=identity,
+                          amount_delta_f::Function=identity
+
+    )
+    # shake
+    pb_t = shake(pb, nK=nK, sample_f=sample_f)
+    # saturate
+    pb_s,sol_s = saturate(pb_t, solve_f=solve_f, demand_order_f=demand_order_f, amount_delta_f=amount_delta_f)
+    # increase demand
+    nselecteddemands = Int64(max(1, trunc(demand_p * nk(pb_s))))
+    demand_idx = sample(1:nk(pb_s), nselecteddemands, replace=false)
+    new_amounts = demand_amounts(pb_s)
+    new_amounts[demand_idx] *= amount_factor
+    new_demands = [Demand(d.src,d.dst,a) for (d,a) in zip(pb_s.demands,new_amounts)]
+    return MCF(pb_s.graph, new_demands)
+end
