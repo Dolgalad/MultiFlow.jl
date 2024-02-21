@@ -42,16 +42,21 @@ export
     demands,
     add_demand!,
     demand_amounts,
+    demand_endpoints,
+    aggregate_demands,
+    get_path,
     # MCF solutions
     MCFSolution,
     is_solution,
     arc_flow_value,
     is_feasible,
     used_capacity,
+    available_capacity,
     objective_value,
     paths,
     paths_from_arc_flow_values,
     solution_from_arc_flow_values,
+    path_capacity,
     # reading/writing
     load,
     load_csv,
@@ -72,7 +77,12 @@ export
     solve!,
     add_column!,
     update_pricing_problem!,
-    solve_column_generation
+    solve_column_generation,
+    # instance generation
+    random_demand_amounts,
+    random_demand_endpoints,
+    shake,
+    non_saturated_path_exists
 
 
 #MultiFlows
@@ -87,5 +97,7 @@ include("solver_stats.jl")
 include("solvers/heuristic.jl")
 include("solvers/compact.jl")
 include("solvers/column_generation.jl")
+
+include("generators.jl")
 
 end # module MultiFlows

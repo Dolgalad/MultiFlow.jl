@@ -19,7 +19,7 @@ struct MCF{T<:Number, N<:Number}
 end
 
 """
-    MCF(g::AbstractGraph{T}, cost::Vector{N}, capacity::Vector{N}, demands::Vector{Demand{T,N})
+    MCF(g::AbstractGraph{T}, cost::AbstractVector{N}, capacity::AbstractVector{N}, demands::Vector{Demand{T,N})
 
 Create a `MCF` object from an `AbstractGraph` object, a cost and capacity vector with length `ne(g)` and a set of demands.
 
@@ -36,7 +36,7 @@ MCF(nv = 6, ne = 14, nk = 1)
 
 `cost, capacity` vectors must have same length as `ne(gr)` : 
 """
-function MCF(g::AbstractGraph{T}, cost::Vector{N}, capacity::Vector{N}, demands::Vector{Demand{T,N}}) where {T<:Number, N<:Number}
+function MCF(g::AbstractGraph{T}, cost::AbstractVector{N}, capacity::AbstractVector{N}, demands::Vector{Demand{T,N}}) where {T<:Number, N<:Number}
     #if (ne(g) != length(cost)) || (ne(g) != length(capacity))
     #    throw(DimensionMismatch("Expect ne(g) == length(cost) == length(capacity), got $((ne(g), length(cost), length(capacity)))"))
     #end
@@ -342,7 +342,9 @@ function demands(pb::MCF{T,N}, s::T, t::T) where {T,N}
 end
 
 """
+    add_demand!(pb::MCF{T,N}, s::T, t::T, a::N) where {T,N}
     add_demand!(pb::MCF{T,N}, demand::Demand{N}) where {T,N}
+
 
 Add a demand to the problem.
 
@@ -351,17 +353,28 @@ Add a demand to the problem.
 julia> pb = MCF(grid((3,2)), ones(7), ones(7), Demand{Int64,Float64}[])
 MCF(nv = 6, ne = 14, nk = 0)
 
-julia> add_demand!(pb, Demand(1, 2, 1.0))
+julia> add_demand!(pb, 1, 2, 1.0)
 1-element Vector{Demand{Int64, Float64}}:
  Demand{Int64, Float64}(1, 2, 1.0)
 
-julia> pb
-MCF(nv = 6, ne = 14, nk = 1)
-	Demand{Int64, Float64}(1, 2, 1.0)
+julia> add_demand!(pb, Demand(4, 2, 1.0))
+2-element Vector{Demand{Int64, Float64}}:
+ Demand{Int64, Float64}(1, 2, 1.0)
+ Demand{Int64, Float64}(4, 2, 1.0)
 
+julia> pb
+MCF(nv = 6, ne = 14, nk = 2)
+	Demand{Int64, Float64}(1, 2, 1.0)
+	Demand{Int64, Float64}(4, 2, 1.0)
+
+```
 """
 function add_demand!(pb::MCF{T,N}, demand::Demand{T,N}) where {T,N}
     push!(pb.demands, demand)
+end
+
+function add_demand!(pb::MCF{T,N}, s::T, t::T, a::N) where {T,N}
+    push!(pb.demands, Demand(s,t,a))
 end
 
 """
@@ -383,4 +396,78 @@ julia> demand_amounts(pb)
 """
 function demand_amounts(pb::MCF)
     return [d.amount for d in pb.demands]
+end
+
+"""
+    demand_endpoints(pb::MCF)
+
+Return vector of source and destination nodes for each demand.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), ones(7), ones(7), [Demand(1,2,1.), Demand(1,3,.5)]);
+
+julia> demand_endpoints(pb)
+([1, 1], [2, 3])
+
+```
+"""
+function demand_endpoints(pb::MCF{T,N}) where {T,N}
+    s, t = T[], T[]
+    for d in pb.demands
+        push!(s, d.src)
+        push!(t, d.dst)
+    end
+    return s, t
+end
+
+"""
+    aggregate_demands(pb::MCF)
+
+Create new instance with aggregated demands : if demands ``k_1, k_2`` are such that ``s_{k_1} = s_{k_2}`` and ``t_{k_1} = t_{k_2}`` they are removed from the problem and a new demand ``k'`` with ``b_{k'} = b_{k_1} + b_{k_2}`` and same endpoints is added.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), ones(7), ones(7), [Demand(1,3,1.), Demand(1,3,1.)])
+MCF(nv = 6, ne = 14, nk = 2)
+	Demand{Int64, Float64}(1, 3, 1.0)
+	Demand{Int64, Float64}(1, 3, 1.0)
+
+julia> aggregate_demands(pb)
+MCF(nv = 6, ne = 14, nk = 1)
+	Demand{Int64, Float64}(1, 3, 2.0)
+
+```
+"""
+function aggregate_demands(pb::MCF{T,N}) where {T,N}
+    amounts = Dict{Tuple{T,T},N}()
+    for d in pb.demands
+        if (d.src,d.dst) in keys(amounts)
+            amounts[d.src,d.dst] += d.amount
+        else
+            amounts[d.src,d.dst] = d.amount
+        end
+    end
+    return MCF(pb.graph, [Demand(v.first[1], v.first[2], v.second) for v in amounts])
+end
+
+"""
+    get_path(pb::MCF{T,N}, s::T, t::T; 
+             alg::Function=(s,t)->enumerate_paths(dijkstra_shortest_paths(pb.graph, s), t)
+            ) where {T,N}
+
+
+Get path from `s` to `t` for MCF problem `pb`.
+
+# Example
+```jldoctest; setup = :(using Graphs; pb = MCF(grid((3,2)), ones(7), ones(7), [Demand(1,3,1.), Demand(1,3,1.)]))
+julia> get_path(pb, 1, 6)
+VertexPath{Int64}([1, 2, 5, 6])
+
+```
+"""
+function get_path(pb::MCF{T,N}, s::T, t::T; 
+        alg::Function=(s,t)->enumerate_paths(dijkstra_shortest_paths(pb.graph, s, cost_matrix(pb)), t)
+    ) where {T,N}
+    return VertexPath(alg(s,t))
 end

@@ -34,6 +34,9 @@ pages_files = [
         "solvers/heuristic_solver.md",
         "solvers/compact_solver.md",
         "solvers/column_generation.md",
+    ],
+    "Datasets" => [
+        "datasets/generators.md",
     ]
 ]
 

@@ -107,23 +107,23 @@ Compute total edge capacity used by the solution.
 
 # Example
 ```jldoctest; setup = :(using Graphs)
-julia> pb = MCF(grid((3,2)), ones(14), ones(14), [Demand(1,2,2.)]);
+julia> pb = MCF(grid((3,2)), ones(14), ones(14), [Demand(1,2,1.)]);
 
 julia> sol = MCFSolution([[VertexPath([1,4,5,2])]], [[1.]]);
 
 julia> used_capacity(sol, pb)
 14-element Vector{Float64}:
  0.0
- 2.0
+ 1.0
  0.0
  0.0
  0.0
- 2.0
+ 1.0
  0.0
  0.0
  0.0
  0.0
- 2.0
+ 1.0
  0.0
  0.0
  0.0
@@ -139,6 +139,41 @@ function used_capacity(sol::MCFSolution, pb::MCF)
         end
     end
     return used_cap
+end
+
+"""
+    available_capacity(sol::MCFSolution, pb::MCF)
+
+Compute available capacities on the graph for a given solution. 
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), ones(14), ones(14), [Demand(1,2,1.)]);
+
+julia> sol = MCFSolution([[VertexPath([1,4,5,2])]], [[1.]]);
+
+julia> available_capacity(sol, pb)
+14-element Vector{Float64}:
+ 1.0
+ 0.0
+ 1.0
+ 1.0
+ 1.0
+ 0.0
+ 1.0
+ 1.0
+ 1.0
+ 1.0
+ 0.0
+ 1.0
+ 1.0
+ 1.0
+
+```
+
+"""
+function available_capacity(sol::MCFSolution, pb::MCF)
+    return capacities(pb) .- used_capacity(sol, pb)
 end
 
 """
@@ -359,3 +394,24 @@ function solution_from_arc_flow_values(x::AbstractMatrix{Float64}, pb::MCF)
     end
     return MCFSolution(sol_paths, sol_flows)
 end
+
+"""
+    path_capacity(p::VertexPath, pb::MCF)
+
+Get minimum capacity of arcs belonging to path `p`.
+
+# Example
+```jldoctest; setup = :(using Graphs; )
+julia> pb = MCF(grid((3,2)), ones(Int64,7), 1:7, [Demand(1,2,2)]);
+
+julia> p = get_path(pb, 1, 6)
+VertexPath{Int64}([1, 2, 5, 6])
+
+julia> path_capacity(p, pb)
+1
+
+```
+"""
+path_capacity(p::VertexPath, pb::MCF) = path_weight(p, pb.graph, aggr=minimum, dstmx=capacity_matrix(pb))
+
+
