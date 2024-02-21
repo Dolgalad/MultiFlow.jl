@@ -103,7 +103,7 @@ Plot MCF solution.
 """
 function mcfsolplot(sol::MCFSolution, pb::MCF, layout::Function=spring_layout; keyargs...)
     # layout
-    loc_x, loc_y = layout(g)
+    loc_x, loc_y = layout(pb.graph)
     return mcfsolplot(sol, pb, loc_x, loc_y; keyargs...)
 end
 
