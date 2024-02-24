@@ -37,6 +37,9 @@ pages_files = [
     ],
     "Datasets" => [
         "datasets/generators.md",
+    ],
+    "Installation and development" => [
+        "development.md"
     ]
 ]
 
