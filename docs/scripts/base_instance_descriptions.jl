@@ -24,7 +24,10 @@ for instance_path in readdir(instance_dir, join=true)
     if is_instance_dir(instance_path)
         instance_name = basename(instance_path)
         pb = MultiFlows.load(instance_path, edge_dir=:double)
-        draw(PNG("./docs/src/assets/img/$(instance_name).png", 6cm, 6cm), mcfplot(pb, 
+        if !isdir("./docs/src/assets/img/base_instances")
+            mkpath("./docs/src/assets/img/base_instances")
+        end
+        draw(PNG("./docs/src/assets/img/base_instances/$(instance_name).png", 6cm, 6cm), mcfplot(pb, 
                                                                                   nodelabel=nothing,
                                                                                   minedgelinewidth=.1,
                                                                                   maxedgelinewidth=.1,
@@ -32,7 +35,7 @@ for instance_path in readdir(instance_dir, join=true)
                                                                                  )
             )
 
-        row = DataFrame(name=replace(instance_name, "_"=>raw"\_"), nv=nv(pb), ne=ne(pb), nk=nk(pb), img="![](../assets/img/$(instance_name).png)")
+        row = DataFrame(name=replace(instance_name, "_"=>raw"\_"), nv=nv(pb), ne=ne(pb), nk=nk(pb), img="![](../assets/img/base_instances/$(instance_name).png)")
 
         append!(instance_data, row)
     end
