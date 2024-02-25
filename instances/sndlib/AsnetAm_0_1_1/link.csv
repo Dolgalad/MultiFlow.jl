@@ -1,4 +1,4 @@
-srcNodeId,dstNodeId,cost,bandwidth,latency
+srcNodeId,dstNodeId,cost,capacity,delay
 1,2,5.0,10000.0,123.63
 1,3,5.0,10000.0,190.15
 1,7,2.5,20000.0,280.39

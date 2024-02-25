@@ -39,7 +39,10 @@ Plot MCF problem. _MultiFlows.jl_ uses the _GraphPlot.jl_ package for generating
 """
 function mcfplot(pb::MCF, loc_x::Vector{Float64}, loc_y::Vector{Float64}; 
         minedgelinewidth=1.0,
-        maxedgelinewidth=10.0
+        maxedgelinewidth=10.0,
+        nodelabelsize=4,
+        nodelabel=collect(1:nv(pb.graph)),
+        arrowlengthfrac=0.1,
     )
     edgecolor = [colorant"lightgray", colorant"orange"]
     # create a graph with demand edges
@@ -85,12 +88,15 @@ function mcfplot(pb::MCF, loc_x::Vector{Float64}, loc_y::Vector{Float64};
     end
     edgestrokec = [edgecolor[demand_edge_flag_map[src(e), dst(e)]] for e in edges(g)]
     # node labels
-    nodelabel = collect(1:nv(g))
+    #nodelabel = collect(1:nv(g))
     # Edge colors
     return gplot(g, loc_x, loc_y, 
                  edgestrokec=edgestrokec, 
                  nodelabel=nodelabel, 
-                 edgelinewidth=edgelinewidth)
+                 edgelinewidth=edgelinewidth,
+                 nodelabelsize=nodelabelsize,
+                 arrowlengthfrac=arrowlengthfrac,
+                )
 end
 
 """

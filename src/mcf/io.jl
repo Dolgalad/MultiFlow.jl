@@ -39,7 +39,7 @@ function load_csv(dirname::String;
     linkpath = joinpath(dirname, "link.csv")
     servicepath = joinpath(dirname, "service.csv")
     if !isfile(linkpath) || !isfile(servicepath)
-        throw(UnknownMultiFlowFormat("Could not find $linkfile and $servicefile"))
+        throw(ArgumentError("Could not find $linkpath and $servicepath"))
     end
     dflinks = CSV.read(linkpath, DataFrame)
     rename!(dflinks, strip.(lowercase.(names(dflinks))))
@@ -66,7 +66,7 @@ function load_csv(dirname::String;
 end
 
 """
-    save(pb::MCF, dirname::String)
+    save(pb::MCF, dirname::String; verbose::Bool=false)
 
 Save MCF instance to `dirname`. Will create the files `<dirname>/link.csv` and `<dirname>/service.csv`. If folder does not exist it will be created.
 

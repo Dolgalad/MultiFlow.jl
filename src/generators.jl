@@ -1,10 +1,10 @@
 """
-    random_demand_bandwidths(pb::MCF, n::Int64=nk(pb); factor::Float64=1.)
+    random_demand_amounts(pb::MCF, n::Int64=nk(pb); factor::Float64=1.)
 
 Select `n` demand amounts randomly by sampling values from ``\\{ b_k \\}_{k\\in K}``.
 
 # Example
-```jldoctest randdemands; setup = :(using Random; Random.seed!(123); pb = load("../instances/sndlib/AsnetAm_0_1_1", capacity_fieldname="bandwidth", demand_amount_fieldname="bandwidth"))
+```jldoctest randdemands; setup = :(using Random; Random.seed!(123); pb = load("../instances/sndlib/AsnetAm_0_1_1"))
 julia> unique(demand_amounts(pb))
 4-element Vector{Float64}:
   500.0
@@ -69,7 +69,7 @@ end
 Sample new demand endpoints ``s_k, t_k`` randomly from ``\\{ s_k, t_k \\}_{k\\in K}``. The set of origins and destinations from which new endpoints are sampled can be changed by passing a value to the `origins_destinations` arguments. Similarly `sample_f` is a sampling function, the default value samples new endpoints uniformly at random.
 
 # Example
-```jldoctest randdemands; setup = :(using Random; Random.seed!(123); pb = load("../instances/sndlib/AsnetAm_0_1_1", capacity_fieldname="bandwidth", demand_amount_fieldname="bandwidth"))
+```jldoctest randdemands; setup = :(using Random; Random.seed!(123); pb = load("../instances/sndlib/AsnetAm_0_1_1"))
 julia> random_demand_endpoints(pb, 5)
 ([29, 57, 21, 47, 64], [20, 9, 63, 54, 57])
 
