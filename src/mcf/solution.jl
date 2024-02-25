@@ -24,6 +24,16 @@ function Base.show(io::IO, sol::MCFSolution)
 end
 
 """
+    Base.:(==)(s1::MCFSolution, s2::MCFSolution)
+
+Check solution equality. Checks `s1.paths==s2.paths` and `s1.flows==s2.flows`.
+"""
+function Base.:(==)(s1::MCFSolution, s2::MCFSolution)
+    return (s1.paths == s2.paths) && (s1.flows == s2.flows)
+end
+
+
+"""
     is_solution(sol::MCFSolution, pb::MCF)
 
 Check if `sol` is a solution for problem `pb`. Checks if `length(paths) == length(flows) == nk(pb)`, that each path is a valid path on the graph and has the correct endpoints, and that `sum(flows[k]) <= 1`.
@@ -413,5 +423,73 @@ julia> path_capacity(p, pb)
 ```
 """
 path_capacity(p::VertexPath, pb::MCF) = path_weight(p, pb.graph, aggr=minimum, dstmx=capacity_matrix(pb))
+
+"""
+    FileIO.save(sol::MCFSolution, filename::String)
+
+Save solution to file. Uses _JLD2.jl_ for writing data to file.
+
+# Example
+```jldoctest; setup = :(using Graphs,FileIO; )
+julia> pb = MCF(grid((3,2)), ones(Int64,7), 1:7, [Demand(1,2,2)]);
+
+julia> sol,_ = solve_column_generation(pb);
+
+julia> FileIO.save(sol, "sol.jld2")
+
+julia> isfile("sol.jld2")
+true
+
+```
+"""
+function FileIO.save(sol::MCFSolution, filename::String)
+    # maximum number of paths for a demand
+    max_n_paths = maximum(length(pths) for pths in sol.paths)
+    nK = length(sol.paths)
+    nV = maximum(maximum(maximum(p.vertices) for p in pths) for pths in sol.paths)
+    # initialize demand path and flow tensors
+    demand_path_tensor = zeros(Int64, nK, max_n_paths, nV)
+    demand_flow_tensor = zeros(Float64, nK, max_n_paths)
+    for k in 1:nK
+        for (i,p) in enumerate(sol.paths[k])
+            demand_path_tensor[k,i,p.vertices] .= 1:length(p.vertices)
+            demand_flow_tensor[k,i] = sol.flows[k][i]
+        end
+    end
+    jldsave(filename; paths=demand_path_tensor, flows=demand_flow_tensor)
+end
+
+"""
+    load_solution(filename::String)
+
+Load [`MCFSolution`](@ref) from JLD2 data file.
+
+# Example
+```jldoctest; setup = :(using FileIO,Graphs; pb = MCF(grid((3,2)), ones(Int64,7), 1:7, [Demand(1,2,2)]);(sol,_) = solve_column_generation(pb); FileIO.save(sol,"sol.jld2"))
+julia> sol = load_solution("sol.jld2")
+MCFSolution
+	Demand k = 1
+		0.5 on VertexPath{Int64}([1, 2])
+		0.5 on VertexPath{Int64}([1, 4, 5, 2])
+
+```
+"""
+function load_solution(filename::String)
+    data = FileIO.load(filename)
+    nK = size(data["paths"], 1)
+    paths = [VertexPath[] for k in 1:nK]
+    flows = [Float64[] for k in 1:nK]
+
+    for k in 1:nK
+        for i in 1:size(data["paths"], 2)
+            if any(data["paths"][k,i,:] .> 0)
+                vidx = findall(>(0), data["paths"][k,i,:])
+                push!(paths[k], VertexPath(vidx[sortperm(data["paths"][k,i,vidx])]))
+                push!(flows[k], data["flows"][k,i])
+            end
+        end
+    end
+    return MCFSolution(paths, flows)
+end
 
 

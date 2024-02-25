@@ -37,6 +37,12 @@ pages_files = [
     ],
     "Datasets" => [
         "datasets/generators.md",
+    ],
+    "Sparsification" => [
+        "sparsify.md",
+    ],
+    "Installation and development" => [
+        "development.md"
     ]
 ]
 
@@ -49,9 +55,15 @@ pages = [
 
 DocMeta.setdocmeta!(MultiFlows, :DocTestSetup, :(using MultiFlows); recursive=true) 
 
+
 makedocs(
            sitename="MultiFlows.jl", 
-           format = Documenter.HTML(prettyurls = false),
+           format = Documenter.HTML(
+                                    prettyurls = false,
+                                    assets = [
+                                              "assets/extra_styles.css"
+                                             ],
+                                   ),
            pages=[
                section_name => [
                    get_title(joinpath(normpath(@__FILE__, ".."), "src", file)) => file for

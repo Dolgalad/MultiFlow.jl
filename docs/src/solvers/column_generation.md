@@ -1,6 +1,9 @@
 # Column Generation
 
-![Column Generation](../assets/img/cg.png)
+```@raw html
+<img class="display-light-only" src="../assets/img/cg_light.png" alt="Column Generation"/>
+<img class="display-dark-only" src="../assets/img/cg_dark.png" alt="Column Generation"/>
+```
 
 
 ```@eval

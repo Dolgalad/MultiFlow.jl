@@ -69,6 +69,16 @@ end
     save(pb::MCF, dirname::String)
 
 Save MCF instance to `dirname`. Will create the files `<dirname>/link.csv` and `<dirname>/service.csv`. If folder does not exist it will be created.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), ones(Int64,7), 1:7, [Demand(1,2,2)]);
+
+julia> save(pb, "instance")
+("instance/link.csv", "instance/service.csv")
+
+```
+
 """
 function save(pb::MCF, dirname::String; verbose::Bool=false)
     link_filename = joinpath(dirname, "link.csv")
@@ -76,8 +86,8 @@ function save(pb::MCF, dirname::String; verbose::Bool=false)
     # link dataframe
     link_df = DataFrame(srcNodeId=pb.graph.srcnodes, 
                         dstNodeId=pb.graph.dstnodes, 
-                        cost=arc_features(pb.graph, 1), 
-                        capacity=arc_features(pb.graph, 2)
+                        cost=edge_features(pb.graph, 1), 
+                        capacity=edge_features(pb.graph, 2)
                        )
     #link_df = unique(link_df)
     service_df = DataFrame(srcNodeId=[d.src for d in pb.demands], 

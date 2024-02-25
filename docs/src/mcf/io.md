@@ -76,9 +76,23 @@ julia> adjacency_matrix(pb.graph)
 
 ### Saving instances
 To save an MCF instance to a directory : 
-```julia
-julia> save(pb, "path_to_instance")
+
+```@example savemcf
+push!(LOAD_PATH, "../../..") # hide
+using Graphs, CSV, MultiFlows, DataFrames, Latexify # hide
+pb = MCF(grid((3,2)), ones(Int64,7), 1:7, [Demand(1,2,2)]);
+save(pb, "instance")
+df = CSV.read("instance/link.csv", DataFrame)
+mdtable(df,latex=false) # hide
 ```
+
+`service.csv` contents : 
+```@example savemcf
+df = CSV.read("instance/service.csv", DataFrame)
+mdtable(df,latex=false) # hide
+```
+
+
 
 This will create two files : `path_to_instance/link.csv` and `path_to_instance/service.csv`.
 
