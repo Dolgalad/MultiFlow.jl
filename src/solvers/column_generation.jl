@@ -283,10 +283,11 @@ end
                                  max_unchanged::Int64=5,
                                  max_iterations::Int64=100,
                                  direct::Bool=true,
+                                 return_rmp::Bool=false,
     )
 
 
-Solve MCF problem using Column Generation. Returns the final RMP and a [`SolverStatistics`](@ref) containing statistics from the solver run.
+Solve MCF problem using Column Generation. Returns a [`MCFSolution`](@ref) object and  a [`SolverStatistics`](@ref) containing statistics from the solver run. If `return_rmp=true` the second return value is a tuple where the first item is the `JuMP.Model` corresponding to the final RMP and the second item are the solver statistics.
 
 | **Argument** | **Description** |
 |---|---|
@@ -344,7 +345,8 @@ function solve_column_generation(pb::MCF;
                                  max_unchanged::Int64=5,
                                  max_iterations::Int64=100,
                                  direct::Bool=true,
-                                 rmp_solve_callback::Function=(rmp) -> ()
+                                 rmp_solve_callback::Function=(rmp) -> (),
+                                 return_rmp::Bool=false
     )
     best_rmpsol = 1e30
     tol = 1e-8

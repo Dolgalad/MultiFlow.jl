@@ -36,7 +36,7 @@ julia> unique(new_amounts)
 
 ```
 """
-function random_demand_amounts(pb::MCF, n::Int64=nk(pb); factor::Float64=1.)
+function random_demand_amounts(pb::MCF, n::Int64=nk(pb); factor::N=1) where {N<:Number}
     da = demand_amounts(pb)
     dtype = eltype(da)
     return dtype.(rand(da, n)) * factor
@@ -137,7 +137,14 @@ function shake(pb::MCF{T,N};
     new_amounts = random_demand_amounts(pb, nK; factor=amount_factor)
     #new_lat = random_demand_latencies(inst; factor=latency_factor, ndemands=ndemands)
     new_demand_src, new_demand_trg = random_demand_endpoints(pb, nK, origins_destinations=origins_destinations, sample_f=sample_f)
-    return MCF(pb.graph, [Demand(s,t,a) for (s,t,a) in zip(new_demand_src, new_demand_trg, new_amounts)])
+    # convert features to match the type of amounts
+    if eltype(new_amounts) != N
+        g = convert_features(pb.graph, eltype(new_amounts))
+        return MCF(g, [Demand(s,t,a) for (s,t,a) in zip(new_demand_src, new_demand_trg, new_amounts)])
+    else
+        return MCF(pb.graph, [Demand(s,t,a) for (s,t,a) in zip(new_demand_src, new_demand_trg, new_amounts)])
+    end
+
 end
 
 """
@@ -327,3 +334,43 @@ function generate_example(pb::MCF;
     new_demands = [Demand(d.src,d.dst,a) for (d,a) in zip(pb_s.demands,new_amounts)]
     return MCF(pb_s.graph, new_demands)
 end
+
+"""
+    make_dataset(pb::MCF, n::Int64, path::String)
+
+Create a dataset by applying perturbations to a reference instance. Saves resulting instance and solution files to path directory.
+"""
+function make_dataset(pb::MCF, n::Int64, path::String; 
+                      perturbation_f::Function=generate_example, 
+                      show_progress::Bool=true, 
+                      labeling_f::Union{Nothing,Function}=nothing,
+                      overwrite::Bool=true,
+    )
+    c = 0
+    if isdir(path) && overwrite
+        rm(path, recursive=true, force=true)
+    end
+    mkpath(path)
+    if show_progress
+        progress = ProgressBar(1:n)
+    else
+        progress = 1:n
+    end
+    for c in progress
+        # save the instance and the solution
+        instance_dir = joinpath(path, string(c))
+        mkpath(instance_dir)
+
+        # generate an instance
+        npb = perturbation_f(pb)
+        # save instance
+        save(npb, instance_dir, verbose=false)
+
+        # if a labeling function was provided it is called by passing the path of the saved instance
+        if !isnothing(labeling_f)
+            labeling_f(instance_dir)
+        end
+    end
+end
+
+

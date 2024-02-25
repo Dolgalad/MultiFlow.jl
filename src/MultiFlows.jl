@@ -8,6 +8,9 @@ using SimpleWeightedGraphs
 using SparseArrays
 using JuMP
 using StatsBase
+using FileIO
+using JLD2
+using ProgressBars
 
 export 
     # Feature graph
@@ -22,6 +25,7 @@ export
     double_edges!,
     edge_features,
     edge_index_matrix,
+    convert_features,
     # Paths
     VertexPath,
     path_weight,
@@ -58,6 +62,7 @@ export
     paths_from_arc_flow_values,
     solution_from_arc_flow_values,
     path_capacity,
+    load_solution,
     # reading/writing
     load,
     load_csv,
@@ -102,5 +107,6 @@ include("solvers/compact.jl")
 include("solvers/column_generation.jl")
 
 include("generators.jl")
+include("sparsify.jl")
 
 end # module MultiFlows

@@ -1,0 +1,471 @@
+\documentclass[varwidth]{standalone}
+
+\usepackage{caption}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{graphs,quotes,arrows}
+\usetikzlibrary{automata, positioning}
+\usetikzlibrary{shapes.geometric,fit,backgrounds}
+
+\begin{document}
+
+\begin{figure}
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \resizebox{.9\linewidth}{!}{
+		\begin{tikzpicture}[
+				vertex/.style={
+					draw=black,
+					fill=white,
+					circle,
+					minimum width=1cm,
+					line width=3,
+					%black,
+					text=black,
+				},
+				arc/.style={
+					line width=3,
+					white,
+				},
+				selectedarc/.style={
+					line width=10,
+					white,
+				},
+			]
+		
+			\node[vertex] (1) at (-1.336365904076301, 10.0) {};
+			\node[vertex] (2) at (0.9639245534544627, 0.13647649046689025) {};
+			\node[vertex] (3) at (-7.868384295326701, -4.030113029934289) {};
+			\node[vertex,fill=yellow,minimum width=1.5cm] (4) at (-1.3490944098932645, -4.231225200759196) {\Huge $s$};
+			\node[vertex] (5) at (3.229385653688852, 6.961056095439395) {};
+			\node[vertex] (6) at (-2.2716155356107723, -10.0) {};
+			\node[vertex] (7) at (1.228623243310245, 3.75318474862272) {};
+			\node[vertex] (8) at (4.267311886762492, -4.235940902849421) {};
+			\node[vertex] (9) at (7.888798402943101, 2.6596157149133615) {};
+			\node[vertex] (10) at (3.605476867102728, -0.2898441190734513) {};
+			\node[vertex] (11) at (-10.0, -7.038186255952379) {};
+			\node[vertex] (12) at (6.196328804880393, 1.3239540970244001) {};
+			\node[vertex] (13) at (-9.472681651515378, -1.2575112000270994) {};
+			\node[vertex] (14) at (10.0, 4.9726886397042165) {};
+			\node[vertex] (15) at (1.6200761381334639, -3.669215262627392) {};
+			\node[vertex] (16) at (-6.938223805680394, -6.610428441285226) {};
+			\node[vertex] (17) at (-6.77393004803605, 0.49982645602941744) {};
+			\node[vertex] (18) at (-4.275788614838421, -3.3180666643116954) {};
+			\node[vertex] (19) at (5.723435093016831, 6.955828074636137) {};
+			\node[vertex] (20) at (9.038564139820009, -1.2418241950405295) {};
+			\node[vertex] (21) at (-6.102889332574689, 7.584731115032728) {};
+			\node[vertex] (22) at (-2.4502120922698536, 1.5569234949460853) {};
+			\node[vertex] (23) at (7.264505794354585, 4.720789569219905) {};
+			\node[vertex] (24) at (6.0346080937823405, -2.9215435681231314) {};
+			\node[vertex,fill=green,minimum width=1.5cm] (25) at (0.8369506729753917, 8.046332972577769) {\Huge $t$};
+			\node[vertex] (26) at (-0.5136996722267817, -6.50647908328474) {};
+			\node[vertex] (27) at (-5.732896703332702, 2.896046595284245) {};
+			\node[vertex] (28) at (-3.960055311548828, -7.134770597590077) {};
+			\node[vertex] (29) at (3.9060257280217314, 3.704915280550367) {};
+			\node[vertex] (30) at (-4.374123024517452, 6.470033066873513) {};
+			\node[vertex] (31) at (-3.546518882330022, 9.094125483785078) {};
+			\node[vertex] (32) at (3.5210534947559746, -6.506105888536822) {};
+			\node[vertex] (33) at (-1.1391545743892562, 5.867930887414079) {};
+			\node[vertex] (34) at (-9.562170202852489, -3.204779698068138) {};
+			\node[vertex] (35) at (-4.269652819733305, 3.742335421458003) {};
+			\begin{scope}[on background layer]
+				\path (1) edge[arc] (25);
+				\path (1) edge[arc] (31);
+				\path (1) edge[arc] (33);
+				\path (2) edge[arc] (4);
+				\path (2) edge[selectedarc] (7);
+				\path (2) edge[arc] (10);
+				\path (2) edge[arc] (15);
+				\path (2) edge[arc] (22);
+				\path (2) edge[arc] (29);
+				\path (3) edge[arc] (13);
+				\path (3) edge[arc] (16);
+				\path (3) edge[arc] (18);
+				\path (3) edge[arc] (34);
+				\path (4) edge[selectedarc] (2);
+				\path (4) edge[arc] (15);
+				\path (4) edge[arc] (18);
+				\path (4) edge[arc] (26);
+				\path (4) edge[arc] (28);
+				\path (5) edge[arc] (7);
+				\path (5) edge[arc] (19);
+				\path (5) edge[arc] (25);
+				\path (5) edge[arc] (29);
+				\path (6) edge[arc] (26);
+				\path (6) edge[arc] (28);
+				\path (7) edge[arc] (2);
+				\path (7) edge[arc] (5);
+				\path (7) edge[arc] (10);
+				\path (7) edge[arc] (22);
+				\path (7) edge[selectedarc] (25);
+				\path (7) edge[arc] (29);
+				\path (7) edge[arc] (33);
+				\path (8) edge[arc] (10);
+				\path (8) edge[arc] (15);
+				\path (8) edge[arc] (24);
+				\path (8) edge[arc] (32);
+				\path (9) edge[arc] (12);
+				\path (9) edge[arc] (14);
+				\path (9) edge[arc] (20);
+				\path (9) edge[arc] (23);
+				\path (9) edge[arc] (29);
+				\path (10) edge[arc] (2);
+				\path (10) edge[arc] (7);
+				\path (10) edge[arc] (8);
+				\path (10) edge[arc] (12);
+				\path (10) edge[arc] (15);
+				\path (10) edge[arc] (24);
+				\path (10) edge[arc] (29);
+				\path (11) edge[arc] (16);
+				\path (11) edge[arc] (34);
+				\path (12) edge[arc] (9);
+				\path (12) edge[arc] (10);
+				\path (12) edge[arc] (23);
+				\path (12) edge[arc] (24);
+				\path (12) edge[arc] (29);
+				\path (13) edge[arc] (3);
+				\path (13) edge[arc] (17);
+				\path (13) edge[arc] (34);
+				\path (14) edge[arc] (9);
+				\path (14) edge[arc] (23);
+				\path (15) edge[arc] (2);
+				\path (15) edge[arc] (4);
+				\path (15) edge[arc] (8);
+				\path (15) edge[arc] (10);
+				\path (15) edge[arc] (26);
+				\path (16) edge[arc] (3);
+				\path (16) edge[arc] (11);
+				\path (16) edge[arc] (18);
+				\path (16) edge[arc] (28);
+				\path (17) edge[arc] (13);
+				\path (17) edge[arc] (22);
+				\path (17) edge[arc] (27);
+				\path (17) edge[arc] (34);
+				\path (17) edge[arc] (35);
+				\path (18) edge[arc] (3);
+				\path (18) edge[arc] (4);
+				\path (18) edge[arc] (16);
+				\path (18) edge[arc] (22);
+				\path (18) edge[arc] (26);
+				\path (18) edge[arc] (27);
+				\path (18) edge[arc] (28);
+				\path (19) edge[arc] (5);
+				\path (19) edge[arc] (23);
+				\path (19) edge[arc] (29);
+				\path (20) edge[arc] (9);
+				\path (20) edge[arc] (24);
+				\path (21) edge[arc] (27);
+				\path (21) edge[arc] (30);
+				\path (21) edge[arc] (31);
+				\path (22) edge[arc] (2);
+				\path (22) edge[arc] (7);
+				\path (22) edge[arc] (17);
+				\path (22) edge[arc] (18);
+				\path (22) edge[arc] (33);
+				\path (22) edge[arc] (35);
+				\path (23) edge[arc] (9);
+				\path (23) edge[arc] (12);
+				\path (23) edge[arc] (14);
+				\path (23) edge[arc] (19);
+				\path (23) edge[arc] (29);
+				\path (24) edge[arc] (8);
+				\path (24) edge[arc] (10);
+				\path (24) edge[arc] (12);
+				\path (24) edge[arc] (20);
+				\path (24) edge[arc] (32);
+				\path (25) edge[arc] (1);
+				\path (25) edge[arc] (5);
+				\path (25) edge[arc] (7);
+				\path (25) edge[arc] (33);
+				\path (26) edge[arc] (4);
+				\path (26) edge[arc] (6);
+				\path (26) edge[arc] (15);
+				\path (26) edge[arc] (18);
+				\path (26) edge[arc] (32);
+				\path (27) edge[arc] (17);
+				\path (27) edge[arc] (18);
+				\path (27) edge[arc] (21);
+				\path (27) edge[arc] (30);
+				\path (27) edge[arc] (35);
+				\path (28) edge[arc] (4);
+				\path (28) edge[arc] (6);
+				\path (28) edge[arc] (16);
+				\path (28) edge[arc] (18);
+				\path (29) edge[arc] (2);
+				\path (29) edge[arc] (5);
+				\path (29) edge[arc] (7);
+				\path (29) edge[arc] (9);
+				\path (29) edge[arc] (10);
+				\path (29) edge[arc] (12);
+				\path (29) edge[arc] (19);
+				\path (29) edge[arc] (23);
+				\path (29) edge[arc] (33);
+				\path (30) edge[arc] (21);
+				\path (30) edge[arc] (27);
+				\path (30) edge[arc] (31);
+				\path (30) edge[arc] (33);
+				\path (30) edge[arc] (35);
+				\path (31) edge[arc] (1);
+				\path (31) edge[arc] (21);
+				\path (31) edge[arc] (30);
+				\path (31) edge[arc] (33);
+				\path (32) edge[arc] (8);
+				\path (32) edge[arc] (24);
+				\path (32) edge[arc] (26);
+				\path (33) edge[arc] (1);
+				\path (33) edge[arc] (7);
+				\path (33) edge[arc] (22);
+				\path (33) edge[arc] (25);
+				\path (33) edge[arc] (29);
+				\path (33) edge[arc] (30);
+				\path (33) edge[arc] (31);
+				\path (33) edge[arc] (35);
+				\path (34) edge[arc] (3);
+				\path (34) edge[arc] (11);
+				\path (34) edge[arc] (13);
+				\path (34) edge[arc] (17);
+				\path (35) edge[arc] (17);
+				\path (35) edge[arc] (22);
+				\path (35) edge[arc] (27);
+				\path (35) edge[arc] (30);
+				\path (35) edge[arc] (33);
+			\end{scope}
+		\end{tikzpicture}
+
+	}
+    \end{minipage}
+    \begin{minipage}{0.49\textwidth}
+        \centering
+        \resizebox{.9\linewidth}{!}{
+		\begin{tikzpicture}[
+			vertex/.style={
+				draw=black,
+				fill=white,
+				circle,
+				minimum width=1cm,
+				line width=3,
+				text=black
+			},
+			pruned/.style={
+				opacity=0.2,
+				line width=3,
+				white,
+			},
+			selected/.style={
+				white,
+				opacity=1,
+				line width=3,
+			},
+			sp/.style={
+				white,
+				line width=10
+			}]
+		
+			\node[vertex,pruned] (1) at (-1.336365904076301, 10.0) {};
+			\node[vertex] (2) at (0.9639245534544627, 0.13647649046689025) {};
+			\node[vertex,pruned] (3) at (-7.868384295326701, -4.030113029934289) {};
+			\node[vertex,fill=yellow,minimum width=1.5cm] (4) at (-1.3490944098932645, -4.231225200759196) {\Huge $s$};
+			\node[vertex,pruned] (5) at (3.229385653688852, 6.961056095439395) {};
+			\node[vertex,pruned] (6) at (-2.2716155356107723, -10.0) {};
+			\node[vertex] (7) at (1.228623243310245, 3.75318474862272) {};
+			\node[vertex,pruned] (8) at (4.267311886762492, -4.235940902849421) {};
+			\node[vertex,pruned] (9) at (7.888798402943101, 2.6596157149133615) {};
+			\node[vertex] (10) at (3.605476867102728, -0.2898441190734513) {};
+			\node[vertex,pruned] (11) at (-10.0, -7.038186255952379) {};
+			\node[vertex,pruned] (12) at (6.196328804880393, 1.3239540970244001) {};
+			\node[vertex,pruned] (13) at (-9.472681651515378, -1.2575112000270994) {};
+			\node[vertex,pruned] (14) at (10.0, 4.9726886397042165) {};
+			\node[vertex] (15) at (1.6200761381334639, -3.669215262627392) {};
+			\node[vertex,pruned] (16) at (-6.938223805680394, -6.610428441285226) {};
+			\node[vertex,pruned] (17) at (-6.77393004803605, 0.49982645602941744) {};
+			\node[vertex] (18) at (-4.275788614838421, -3.3180666643116954) {};
+			\node[vertex,pruned] (19) at (5.723435093016831, 6.955828074636137) {};
+			\node[vertex,pruned] (20) at (9.038564139820009, -1.2418241950405295) {};
+			\node[vertex,pruned] (21) at (-6.102889332574689, 7.584731115032728) {};
+			\node[vertex] (22) at (-2.4502120922698536, 1.5569234949460853) {};
+			\node[vertex,pruned] (23) at (7.264505794354585, 4.720789569219905) {};
+			\node[vertex,pruned] (24) at (6.0346080937823405, -2.9215435681231314) {};
+			\node[vertex,fill=green,minimum width=1.5cm] (25) at (0.8369506729753917, 8.046332972577769) {\Huge $t$};
+			\node[vertex,pruned] (26) at (-0.5136996722267817, -6.50647908328474) {};
+			\node[vertex,pruned] (27) at (-5.732896703332702, 2.896046595284245) {};
+			\node[vertex,pruned] (28) at (-3.960055311548828, -7.134770597590077) {};
+			\node[vertex,pruned] (29) at (3.9060257280217314, 3.704915280550367) {};
+			\node[vertex,pruned] (30) at (-4.374123024517452, 6.470033066873513) {};
+			\node[vertex,pruned] (31) at (-3.546518882330022, 9.094125483785078) {};
+			\node[vertex,pruned] (32) at (3.5210534947559746, -6.506105888536822) {};
+			\node[vertex] (33) at (-1.1391545743892562, 5.867930887414079) {};
+			\node[vertex,pruned] (34) at (-9.562170202852489, -3.204779698068138) {};
+			\node[vertex,pruned] (35) at (-4.269652819733305, 3.742335421458003) {};
+			\begin{scope}[on background layer]
+				\path (1) edge[pruned] (25);
+				\path (1) edge[pruned] (31);
+				\path (1) edge[pruned] (33);
+				\path (2) edge[pruned] (4);
+				\path (2) edge[sp] (7);
+				\path (2) edge[pruned] (10);
+				\path (2) edge[pruned] (15);
+				\path (2) edge[pruned] (22);
+				\path (2) edge[pruned] (29);
+				\path (3) edge[pruned] (13);
+				\path (3) edge[pruned] (16);
+				\path (3) edge[pruned] (18);
+				\path (3) edge[pruned] (34);
+				\path (4) edge[sp] (2);
+				\path (4) edge[selected] (15);
+				\path (4) edge[selected] (18);
+				\path (4) edge[pruned] (26);
+				\path (4) edge[pruned] (28);
+				\path (5) edge[pruned] (7);
+				\path (5) edge[pruned] (19);
+				\path (5) edge[pruned] (25);
+				\path (5) edge[pruned] (29);
+				\path (6) edge[pruned] (26);
+				\path (6) edge[pruned] (28);
+				\path (7) edge[pruned] (2);
+				\path (7) edge[pruned] (5);
+				\path (7) edge[selected] (10);
+				\path (7) edge[pruned] (22);
+				\path (7) edge[sp] (25);
+				\path (7) edge[pruned] (29);
+				\path (7) edge[selected] (33);
+				\path (8) edge[pruned] (10);
+				\path (8) edge[pruned] (15);
+				\path (8) edge[pruned] (24);
+				\path (8) edge[pruned] (32);
+				\path (9) edge[pruned] (12);
+				\path (9) edge[pruned] (14);
+				\path (9) edge[pruned] (20);
+				\path (9) edge[pruned] (23);
+				\path (9) edge[pruned] (29);
+				\path (10) edge[pruned] (2);
+				\path (10) edge[pruned] (7);
+				\path (10) edge[pruned] (8);
+				\path (10) edge[pruned] (12);
+				\path (10) edge[selected] (15);
+				\path (10) edge[pruned] (24);
+				\path (10) edge[pruned] (29);
+				\path (11) edge[pruned] (16);
+				\path (11) edge[pruned] (34);
+				\path (12) edge[pruned] (9);
+				\path (12) edge[pruned] (10);
+				\path (12) edge[pruned] (23);
+				\path (12) edge[pruned] (24);
+				\path (12) edge[pruned] (29);
+				\path (13) edge[pruned] (3);
+				\path (13) edge[pruned] (17);
+				\path (13) edge[pruned] (34);
+				\path (14) edge[pruned] (9);
+				\path (14) edge[pruned] (23);
+				\path (15) edge[pruned] (2);
+				\path (15) edge[pruned] (4);
+				\path (15) edge[pruned] (8);
+				\path (15) edge[pruned] (10);
+				\path (15) edge[pruned] (26);
+				\path (16) edge[pruned] (3);
+				\path (16) edge[pruned] (11);
+				\path (16) edge[pruned] (18);
+				\path (16) edge[pruned] (28);
+				\path (17) edge[pruned] (13);
+				\path (17) edge[pruned] (22);
+				\path (17) edge[pruned] (27);
+				\path (17) edge[pruned] (34);
+				\path (17) edge[pruned] (35);
+				\path (18) edge[pruned] (3);
+				\path (18) edge[pruned] (4);
+				\path (18) edge[pruned] (16);
+				\path (18) edge[selected] (22);
+				\path (18) edge[pruned] (26);
+				\path (18) edge[pruned] (27);
+				\path (18) edge[pruned] (28);
+				\path (19) edge[pruned] (5);
+				\path (19) edge[pruned] (23);
+				\path (19) edge[pruned] (29);
+				\path (20) edge[pruned] (9);
+				\path (20) edge[pruned] (24);
+				\path (21) edge[pruned] (27);
+				\path (21) edge[pruned] (30);
+				\path (21) edge[pruned] (31);
+				\path (22) edge[pruned] (2);
+				\path (22) edge[pruned] (7);
+				\path (22) edge[pruned] (17);
+				\path (22) edge[pruned] (18);
+				\path (22) edge[selected] (33);
+				\path (22) edge[pruned] (35);
+				\path (23) edge[pruned] (9);
+				\path (23) edge[pruned] (12);
+				\path (23) edge[pruned] (14);
+				\path (23) edge[pruned] (19);
+				\path (23) edge[pruned] (29);
+				\path (24) edge[pruned] (8);
+				\path (24) edge[pruned] (10);
+				\path (24) edge[pruned] (12);
+				\path (24) edge[pruned] (20);
+				\path (24) edge[pruned] (32);
+				\path (25) edge[pruned] (1);
+				\path (25) edge[pruned] (5);
+				\path (25) edge[pruned] (7);
+				\path (25) edge[selected] (33);
+				\path (26) edge[pruned] (4);
+				\path (26) edge[pruned] (6);
+				\path (26) edge[pruned] (15);
+				\path (26) edge[pruned] (18);
+				\path (26) edge[pruned] (32);
+				\path (27) edge[pruned] (17);
+				\path (27) edge[pruned] (18);
+				\path (27) edge[pruned] (21);
+				\path (27) edge[pruned] (30);
+				\path (27) edge[pruned] (35);
+				\path (28) edge[pruned] (4);
+				\path (28) edge[pruned] (6);
+				\path (28) edge[pruned] (16);
+				\path (28) edge[pruned] (18);
+				\path (29) edge[pruned] (2);
+				\path (29) edge[pruned] (5);
+				\path (29) edge[pruned] (7);
+				\path (29) edge[pruned] (9);
+				\path (29) edge[pruned] (10);
+				\path (29) edge[pruned] (12);
+				\path (29) edge[pruned] (19);
+				\path (29) edge[pruned] (23);
+				\path (29) edge[pruned] (33);
+				\path (30) edge[pruned] (21);
+				\path (30) edge[pruned] (27);
+				\path (30) edge[pruned] (31);
+				\path (30) edge[pruned] (33);
+				\path (30) edge[pruned] (35);
+				\path (31) edge[pruned] (1);
+				\path (31) edge[pruned] (21);
+				\path (31) edge[pruned] (30);
+				\path (31) edge[pruned] (33);
+				\path (32) edge[pruned] (8);
+				\path (32) edge[pruned] (24);
+				\path (32) edge[pruned] (26);
+				\path (33) edge[pruned] (1);
+				\path (33) edge[pruned] (7);
+				\path (33) edge[pruned] (22);
+				\path (33) edge[pruned] (25);
+				\path (33) edge[pruned] (29);
+				\path (33) edge[pruned] (30);
+				\path (33) edge[pruned] (31);
+				\path (33) edge[pruned] (35);
+				\path (34) edge[pruned] (3);
+				\path (34) edge[pruned] (11);
+				\path (34) edge[pruned] (13);
+				\path (34) edge[pruned] (17);
+				\path (35) edge[pruned] (17);
+				\path (35) edge[pruned] (22);
+				\path (35) edge[pruned] (27);
+				\path (35) edge[pruned] (30);
+				\path (35) edge[pruned] (33);
+			\end{scope}
+		\end{tikzpicture}
+	}
+    \end{minipage}
+    \captionsetup{labelformat=empty}
+    \caption{\textcolor{white}{\emph{left}: original network with a candidate path from $s$ to $t$ , \emph{right}: sparsified graph, the shaded parts of the network are ignored during pricing.}}
+    \label{fig:sparse_graph}
+\end{figure}
+
+
+\end{document}

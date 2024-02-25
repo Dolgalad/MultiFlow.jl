@@ -207,6 +207,40 @@ function path_from_edge_indices(ei::Vector{Int64}, g::AbstractGraph)
     return VertexPath(p)
 end
 
+"""
+    Base.length(p::VertexPath; edges=false)
+
+Returns length of the path. Default is to return number of vertices, if `edges=true` returns number of edges.
+
+# Example
+```jldoctest
+julia> p = VertexPath([1,2,3])
+VertexPath{Int64}([1, 2, 3])
+
+julia> length(p)
+3
+
+julia> length(p, edges=true)
+2
+```
+"""
+function Base.length(p::VertexPath; edges=false)
+    if edges
+        return length(p.vertices)-1
+    else
+        return length(p.vertices)
+    end
+end
+
+"""
+    Base.:(==)(p1::VertexPath{T}, p2::VertexPath{T}) where {T} 
+
+Check path equality. Checks `p1.vertices == p2.vertices`.
+"""
+function Base.:(==)(p1::VertexPath{T}, p2::VertexPath{T}) where {T} 
+    return p1.vertices==p2.vertices
+end
+
 #"""
 #    EdgeIndexPath
 #

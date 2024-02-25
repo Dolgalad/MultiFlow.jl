@@ -513,3 +513,24 @@ function edge_index_matrix(g::AbstractGraph{T}) where {T}
         return sparse(s,t,idx)
     end
 end
+
+"""
+    convert_features(g::FeatureDiGraph{T,N}, dtype::DataType) where {T,N}
+
+Convert graph features to type `dtype`.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,2)), ones(Int64,7), 1:7, [Demand(1,2,2)]);
+
+julia> pb.graph
+FeatureDiGraph{Int64, Vector{Int64}}([1, 1, 2, 2, 3, 4, 5, 2, 4, 3, 5, 6, 5, 6], [2, 4, 3, 5, 6, 5, 6, 1, 1, 2, 2, 3, 4, 5], [[1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7]])
+
+julia> convert_features(pb.graph, Float64)
+FeatureDiGraph{Int64, Vector{Float64}}([1, 1, 2, 2, 3, 4, 5, 2, 4, 3, 5, 6, 5, 6], [2, 4, 3, 5, 6, 5, 6, 1, 1, 2, 2, 3, 4, 5], [[1.0, 1.0], [1.0, 2.0], [1.0, 3.0], [1.0, 4.0], [1.0, 5.0], [1.0, 6.0], [1.0, 7.0], [1.0, 1.0], [1.0, 2.0], [1.0, 3.0], [1.0, 4.0], [1.0, 5.0], [1.0, 6.0], [1.0, 7.0]])
+
+```
+"""
+function convert_features(g::FeatureDiGraph{T,N}, dtype::DataType) where {T,N}
+    return FeatureDiGraph(g.srcnodes, g.dstnodes, [dtype.(f) for f in g.features])
+end
