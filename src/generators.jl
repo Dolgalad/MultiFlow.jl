@@ -345,6 +345,7 @@ function make_dataset(pb::MCF, n::Int64, path::String;
                       show_progress::Bool=true, 
                       labeling_f::Union{Nothing,Function}=nothing,
                       overwrite::Bool=true,
+                      progress_prefix::Union{Nothing,String}=nothing,
     )
     c = 0
     if isdir(path) && overwrite
@@ -353,12 +354,18 @@ function make_dataset(pb::MCF, n::Int64, path::String;
     mkpath(path)
     if show_progress
         progress = ProgressBar(1:n)
+        if !isnothing(progress_prefix)
+            set_description(progress, progress_prefix)
+        end
     else
         progress = 1:n
     end
     for c in progress
         # save the instance and the solution
         instance_dir = joinpath(path, string(c))
+        if isdir(instance_dir) && !overwrite
+            continue
+        end
         mkpath(instance_dir)
 
         # generate an instance

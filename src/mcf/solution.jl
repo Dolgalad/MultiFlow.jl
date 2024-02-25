@@ -446,7 +446,7 @@ function FileIO.save(sol::MCFSolution, filename::String)
     # maximum number of paths for a demand
     max_n_paths = maximum(length(pths) for pths in sol.paths)
     nK = length(sol.paths)
-    nV = maximum(maximum(maximum(p.vertices) for p in pths) for pths in sol.paths)
+    nV = maximum(maximum(maximum(p.vertices) for p in pths) for pths in sol.paths if !isempty(pths))
     # initialize demand path and flow tensors
     demand_path_tensor = zeros(Int64, nK, max_n_paths, nV)
     demand_flow_tensor = zeros(Float64, nK, max_n_paths)
