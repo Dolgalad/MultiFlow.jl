@@ -3,6 +3,9 @@ push!(LOAD_PATH,"../src/")
 
 using Documenter, MultiFlows
 
+# run dataset description page generation script
+include("./scripts/base_instance_descriptions.jl")
+
 cp(
     normpath(@__FILE__, "../../README.md"),
     normpath(@__FILE__, "../src/index.md");
@@ -36,6 +39,7 @@ pages_files = [
         "solvers/column_generation.md",
     ],
     "Datasets" => [
+        "datasets/description.md",
         "datasets/generators.md",
     ],
     "Sparsification" => [

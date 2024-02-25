@@ -1,9 +1,15 @@
 # ignore documentation build dir
 docs/build/
 docs/src/index.md
+docs/src/datasets/description.md
 
 # manifest files
 Manifest.toml
 
 # instances
 instances/sndlib/delay_corrected
+docs/src/assets/img/base_instances
+docs/instance
+docs/sol.jld2
+
+

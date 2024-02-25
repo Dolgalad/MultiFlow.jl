@@ -1,4 +1,4 @@
-srcNodeId,dstNodeId,bandwidth,latency
+srcNodeId,dstNodeId,amount,delay
 47,3,500.0,813.59
 26,47,50.0,986.37
 20,9,50.0,902.36
