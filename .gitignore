@@ -1,6 +1,7 @@
 # ignore documentation build dir
 docs/build/
 docs/src/index.md
+docs/src/datasets/description.md
 
 # manifest files
 Manifest.toml
