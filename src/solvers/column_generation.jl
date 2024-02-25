@@ -368,6 +368,9 @@ function solve_column_generation(pb::MCF;
         rmp_solve_callback(rmp)
         if rmpsol >= best_rmpsol - abs(best_rmpsol) * tol
             unchanged += 1
+            if unchanged > max_unchanged
+                break
+            end
         else
             unchanged = 0
 
@@ -386,7 +389,7 @@ function solve_column_generation(pb::MCF;
             end
         end
 
-        if n_added_columns==0 || unchanged>max_unchanged
+        if n_added_columns==0
             break
         end
     end

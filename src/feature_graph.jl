@@ -147,7 +147,8 @@ julia> nv(g)
 3
 ```
 """
-Graphs.nv(g::FeatureDiGraph) = length(Set(vcat(g.srcnodes, g.dstnodes)))
+Graphs.nv(g::FeatureDiGraph) = maximum(Set(vcat(g.srcnodes, g.dstnodes)))
+#Graphs.nv(g::FeatureDiGraph) = length(Set(vcat(g.srcnodes, g.dstnodes)))
 
 """
     ne(g::FeatureDiGraph)

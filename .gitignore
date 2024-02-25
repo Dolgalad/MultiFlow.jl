@@ -12,4 +12,5 @@ docs/src/assets/img/base_instances
 docs/instance
 docs/sol.jld2
 
-
+# datasets
+instances/datasets

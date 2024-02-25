@@ -90,7 +90,8 @@ export
     shake,
     non_saturated_path_exists,
     saturate,
-    generate_example
+    generate_example,
+    make_dataset
 
 
 #MultiFlows
