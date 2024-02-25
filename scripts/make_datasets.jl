@@ -16,6 +16,7 @@ using JLD2
 using FileIO
 using Random
 using BenchmarkTools
+using Tar
 
 Random.seed!(2023) # for reproducability
 
@@ -23,8 +24,8 @@ base_instance_dir = "./instances/sndlib"
 dataset_dir = "./instances/datasets"
 mkpath(dataset_dir)
 
-n_train = 100
-n_test = 10
+n_train = 10000
+n_test = 1000
 
 overwrite = true # if dataset creation was interrupted setting this to true can speed things up, but there is no guarantee to produce same instances as was used in our tests
 
@@ -61,9 +62,9 @@ dataset_types = Dict(
                     )
 
 # dummy run to ensure time measurements are accurate
-pb = load("./instances/sndlib/Oxford_0_1_1", edge_dir=:double)
+pb = MultiFlows.load("./instances/sndlib/Oxford_0_1_1", edge_dir=:double)
 for v in dataset_types
-    make_dataset(pb, 1, "dummy", perturbation_f=v.second[1], labeling_f=v.second[2])
+    make_dataset(pb, 1, "dummy", perturbation_f=v.second[1], labeling_f=v.second[2], show_progress=false)
 end
 rm("dummy", recursive=true, force=true)
 
@@ -84,6 +85,7 @@ for base_instance_path in readdir(base_instance_dir, join=true)
                      perturbation_f=v.second[1],
                      labeling_f=v.second[2], 
                     )
+
         # test dataset
         test_dataset_name = join([base_instance_name, v.first, "test"], "_")
         test_dataset_path = joinpath(dataset_dir, test_dataset_name)
