@@ -28,8 +28,8 @@ jobs:
         #run: sudo apt-get install texlive-latex-base imagemagick texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
         #- name: ImageMagick configuration
         #  run: sudo sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
-      - name: Tex configuration
-        run: sudo texconfig rehash
+        #- name: Tex configuration
+        #  run: sudo texconfig rehash
       - name: Build LaTex
         run: ./make.sh
   build:
