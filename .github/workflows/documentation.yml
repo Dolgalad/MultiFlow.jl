@@ -21,7 +21,7 @@ jobs:
       - name: Check out the repository to the runner
         uses: actions/checkout@v4  
       - name: Install pdflatex, imagemagick
-        run: sudo apt-get install texlive-latex-base imagemagick
+        run: sudo apt-get install texlive-latex-base imagemagick texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
       - name: Build LaTex
         run: ./make.sh
   build:
