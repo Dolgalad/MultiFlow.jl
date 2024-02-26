@@ -46,6 +46,7 @@ jobs:
           packages: >-
             scheme-small
             standalone
+            varwidth
       - name: Ghostscript install
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
