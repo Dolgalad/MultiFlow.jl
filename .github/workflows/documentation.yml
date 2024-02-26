@@ -8,7 +8,16 @@ on:
   pull_request:
 
 jobs:
+  texbuild:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./docs/latex
+    steps:
+      - name: Build LaTex
+        run: ./make.sh
   build:
+    needs: texbuild
     permissions:
       actions: write
       contents: write
