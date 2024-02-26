@@ -14,7 +14,7 @@ for FILE in ./img/*.tex; do
 		exit 1
 	fi
 	PNGFILE="${FILE%.tex}.png"
-	gs -dSAFER -r600 -sDEVICE=pngalpha -o "$PNGFILE" "$PDFFILE" > /dev/null 2>&1
+	gs -dMaxBitmap=2147483647 -dSAFER -r600 -sDEVICE=pngalpha -o "$PNGFILE" "$PDFFILE" > /dev/null 2>&1
 	if [ ! -f "$PNGFILE" ]; then
 		echo "PNG output $PNGFILE does not exist. Quitting"
 		exit 1
