@@ -11,13 +11,13 @@ for FILE in ./img/*.tex; do
 	PDFFILE="${FILE%.tex}.pdf"
 	if [ ! -f "$PDFFILE" ]; then
 		echo "PDF output $PDFFILE does not exist. Quitting"
-		break
+		exit 1
 	fi
 	convert -density 600 "${FILE%.tex}.pdf" "${FILE%.tex}.png" #> /dev/null 2>&1
 	PNGFILE="${FILE%.tex}.png"
 	if [ ! -f "$PNGFILE" ]; then
 		echo "PNG output $PNGFILE does not exist. Quitting"
-		break
+		exit 1
 	fi
 	mv "${FILE%.tex}.png" ../src/assets/img
         rm "${FILE%.tex}.aux" "${FILE%.tex}.log" "${FILE%.tex}.pdf" #> /dev/null 2>&1
