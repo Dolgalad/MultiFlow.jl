@@ -30,6 +30,8 @@ jobs:
         #  run: sudo sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
         #- name: Tex configuration
         #  run: sudo texconfig rehash
+      - name: Tex configuration
+        run: sudo tlmgr install texlive-scripts
       - name: Build LaTex
         run: ./make.sh
   build:
