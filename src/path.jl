@@ -241,6 +241,34 @@ function Base.:(==)(p1::VertexPath{T}, p2::VertexPath{T}) where {T}
     return p1.vertices==p2.vertices
 end
 
+"""
+    shortest_paths(g::AbstractGraph{T}, src::T, dst::T; K::Int64=1)
+
+Compute shortest paths from `s` to `t`. If `K=1` uses `Graphs.dijkstra_shortest_paths` and if `K>1` uses `Graphs.yen_k_shortest_paths`.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> g = grid((3,3))
+{9, 12} undirected simple Int64 graph
+
+julia> shortest_paths(g, 1, 9)
+VertexPath{Int64}([1, 2, 5, 6, 9])
+
+julia> shortest_paths(g, 1, 9, K=2)
+2-element Vector{VertexPath{Int64}}:
+ VertexPath{Int64}([1, 2, 5, 6, 9])
+ VertexPath{Int64}([1, 4, 5, 8, 9])
+
+```
+"""
+function shortest_paths(g::AbstractGraph{T}, s::T, t::T; K::Int64=1, dstmx::AbstractMatrix=weights(g)) where {T}
+    if K==1
+        return VertexPath(enumerate_paths(dijkstra_shortest_paths(g, s), t))
+    else
+        return [VertexPath(p) for p in yen_k_shortest_paths(g, s, t, dstmx, K).paths]
+    end
+end
+
 #"""
 #    EdgeIndexPath
 #

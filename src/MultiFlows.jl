@@ -26,12 +26,14 @@ export
     edge_features,
     edge_index_matrix,
     convert_features,
+    zero_features,
     # Paths
     VertexPath,
     path_weight,
     edge_indices,
     is_path,
     path_from_edge_indices,
+    shortest_paths,
     # MCF
     Demand,
     MCF,

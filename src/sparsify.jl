@@ -28,5 +28,16 @@ end
 
 Sparsify the MCF `pb`.
 """
-function sparsify(sprs::SPSparsifier, pb::MCF)
+function sparsify(sprs::SPSparsifier, pb::MCF{T,N}) where {T,N}
+    filter = zeros(Bool, nk(pb), ne(pb))
+    paths = Dict{Tuple{T,T}, Vector{T}}()
+    for demand in pb.demands
+        if (demand.src,demand.dst) in keys(done_list)
+            filter[k, paths[demand.src,demand.dst]] .= 1
+        else
+            # look for k shortest paths
+
+        end
+    end
+    return filter
 end

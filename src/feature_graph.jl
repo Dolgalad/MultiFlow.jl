@@ -183,8 +183,42 @@ julia> feature_dim(g2)  # two-dimension features
 """
 feature_dim(g::FeatureDiGraph) = size(g.features[1])
 
+
 """
-    Graphs.add_edge!(g::FeatureDiGraph{T,N}, src::T, dst::T, feat::N}
+    zero_features(g::FeatureDiGraph{T,N}) where {T,N}
+
+Create zero valued features for graph `g`.
+
+# Example
+```jldoctest
+julia> g = FeatureDiGraph([1,2,3,1], [2,3,1,4], [1,2,3,4]);
+
+julia> zero_features(g)
+0
+
+julia> g = FeatureDiGraph([1,2,3,1], [2,3,1,4], [[1,2.], [2,3.], [3,4.], [4,5.]]);
+
+julia> zero_features(g)
+2-element Vector{Float64}:
+ 0.0
+ 0.0
+
+julia> g = FeatureDiGraph([1,2,3,1], [2,3,1,4], [rand(2,2) for _ in 1:4]);
+
+julia> zero_features(g)
+2×2 Matrix{Float64}:
+ 0.0  0.0
+ 0.0  0.0
+
+```
+"""
+function zero_features(g::FeatureDiGraph{T,N}) where {T,N}
+    return zero(g.features[1])
+end
+
+
+"""
+    Graphs.add_edge!(g::FeatureDiGraph{T,N}, src::T, dst::T, feat::N=zero_feature(g)}
 
 Add edge to a FeatureDiGraph object going from vertex `src` to `dst` and with features `feat`. Return `true` on success and `false` if graph already has an edge `(src, dst)`. If `force=true` the edge is added even if it already exists.
 
@@ -206,7 +240,7 @@ ERROR: DimensionMismatch("Expected feature dimension (2,) got (3,)")
 [...]
 ```
 """
-function Graphs.add_edge!(g::FeatureDiGraph{T,N}, src::T, dst::T, feat::N; force::Bool=false) where {T<:Number,N}
+function Graphs.add_edge!(g::FeatureDiGraph{T,N}, src::T, dst::T, feat::N=zero_features(g); force::Bool=false) where {T<:Number,N}
     # throw error if dimension of the feature is not 1
     if feature_dim(g) != size(feat)
         throw(DimensionMismatch("Expected feature dimension $(feature_dim(g)) got $(size(feat))"))
@@ -219,6 +253,7 @@ function Graphs.add_edge!(g::FeatureDiGraph{T,N}, src::T, dst::T, feat::N; force
     push!(g.features, feat)
     return true
 end
+
 
 """
     edges(g::FeatureDiGraph)
@@ -534,4 +569,17 @@ FeatureDiGraph{Int64, Vector{Float64}}([1, 1, 2, 2, 3, 4, 5, 2, 4, 3, 5, 6, 5, 6
 """
 function convert_features(g::FeatureDiGraph{T,N}, dtype::DataType) where {T,N}
     return FeatureDiGraph(g.srcnodes, g.dstnodes, [dtype.(f) for f in g.features])
+end
+
+"""
+"""
+function Graphs.rem_edge!(g::FeatureDiGraph{T,N}, s::T, t::T) where {T,N}
+    eim = edge_index_matrix(g)
+    if eim[s,t] == 0
+        return false
+    end
+    deleteat!(g.srcnodes, eim[s,t])
+    deleteat!(g.dstnodes, eim[s,t])
+    deleteat!(g.features, eim[s,t])
+    return true
 end

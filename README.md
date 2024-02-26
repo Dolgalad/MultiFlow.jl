@@ -31,6 +31,14 @@ julia> sol, ss = solve_compact(pb); # solve compact formulation
 julia> sol, ss = solve_column_generation(pb) # solve by column generation
 
 julia> sol
+MCFSolution
+	Demand k = 1
+		1.0 on VertexPath{Int64}([1, 4, 7])
+	Demand k = 2
+		1.0 on VertexPath{Int64}([2, 4, 6])
+	Demand k = 3
+		1.0 on VertexPath{Int64}([3, 4, 6, 7])
+
 ```
 
 ## Documentation
