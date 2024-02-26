@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo $(which pdflatex)
+echo $(which convert)
+
 # Make latex tikz images
 for FILE in ./img/*.tex; do
 	echo $FILE
