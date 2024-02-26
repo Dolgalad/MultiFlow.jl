@@ -23,7 +23,7 @@ jobs:
       - name: Install pdflatex, imagemagick
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: texlive-latex-base imagemagick texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
+          packages: texlive-latex-base imagemagick texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra ghostscript
           version: 1.0
         #run: sudo apt-get install texlive-latex-base imagemagick texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
       - name: Build LaTex
