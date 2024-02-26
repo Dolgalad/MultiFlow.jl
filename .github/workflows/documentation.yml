@@ -46,6 +46,10 @@ jobs:
           packages: >-
             scheme-small
             standalone
+      - name: Ghostscript install
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: ghostscript
       - name: Build LaTex images
         run: cd docs/latex && ./make.sh
       - uses: julia-actions/cache@v1
