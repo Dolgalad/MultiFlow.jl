@@ -27,7 +27,7 @@ jobs:
           version: 1.0
         #run: sudo apt-get install texlive-latex-base imagemagick texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
       - name: ImageMagick configuration
-        run: sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
+        run: sudo sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
       - name: Build LaTex
         run: ./make.sh
   build:
