@@ -8,32 +8,32 @@ on:
   pull_request:
 
 jobs:
-  texbuild:
-    permissions:
-      actions: write
-      contents: write
-      statuses: write
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: docs/latex
-    steps:
-      - name: Check out the repository to the runner
-        uses: actions/checkout@v4  
-      - name: Install pdflatex, imagemagick
-        uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: texlive-latex-base imagemagick texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra ghostscript
-          version: 1.0
-        #run: sudo apt-get install texlive-latex-base imagemagick texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
-        #- name: ImageMagick configuration
-        #  run: sudo sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
-        #- name: Tex configuration
-        #  run: sudo texconfig rehash
-      - name: Build LaTex
-        run: ./make.sh
+  #texbuild:
+  #  permissions:
+  #    actions: write
+  #    contents: write
+  #    statuses: write
+  #  runs-on: ubuntu-latest
+  #  defaults:
+  #    run:
+  #      working-directory: docs/latex
+  #  steps:
+  #    - name: Check out the repository to the runner
+  #      uses: actions/checkout@v4  
+  #    - name: Install pdflatex, imagemagick
+  #      uses: awalsh128/cache-apt-pkgs-action@latest
+  #      with:
+  #        packages: texlive-latex-base imagemagick texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra ghostscript
+  #        version: 1.0
+  #      #run: sudo apt-get install texlive-latex-base imagemagick texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra
+  #      #- name: ImageMagick configuration
+  #      #  run: sudo sed -i '/disable ghostscript format types/,+6d' /etc/ImageMagick-6/policy.xml
+  #      #- name: Tex configuration
+  #      #  run: sudo texconfig rehash
+  #    - name: Build LaTex
+  #      run: ./make.sh
   build:
-    needs: texbuild
+    #needs: texbuild
     permissions:
       actions: write
       contents: write
@@ -41,6 +41,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: teatimeguest/setup-texlive-action@v3
+      - name: Build LaTex images
+        run: cd docs/latex && ./make.sh
       - uses: julia-actions/cache@v1
       - uses: julia-actions/setup-julia@v1
         with:
