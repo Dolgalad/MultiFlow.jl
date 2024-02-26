@@ -8,7 +8,7 @@ echo $(pwd)
 for FILE in ./img/*.tex; do
 	echo $FILE
 	pdflatex -output-directory `dirname $FILE` $FILE > /dev/null 2>&1
-	PDFFILE="${FILE%.tex}.png"
+	PDFFILE="${FILE%.tex}.pdf"
 	if [ ! -f "$PDFFILE" ]; then
 		echo "PDF output $PDFFILE does not exist. Quitting"
 		break
