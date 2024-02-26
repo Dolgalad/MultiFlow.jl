@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./docs/latex
+        working-directory: docs/latex
     steps:
       - name: Build LaTex
         run: ./make.sh
