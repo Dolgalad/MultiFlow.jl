@@ -9,6 +9,10 @@ on:
 
 jobs:
   texbuild:
+    permissions:
+      actions: write
+      contents: write
+      statuses: write
     runs-on: ubuntu-latest
     defaults:
       run:
