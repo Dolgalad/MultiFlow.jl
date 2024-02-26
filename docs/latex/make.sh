@@ -2,6 +2,8 @@
 
 echo $(which pdflatex)
 echo $(which convert)
+echo $(pwd)
+ls
 
 # Make latex tikz images
 for FILE in ./img/*.tex; do
