@@ -18,6 +18,8 @@ jobs:
       run:
         working-directory: docs/latex
     steps:
+      - name: Install pdflatex, imagemagick
+        run: apt-get install texlive-latex-base imagemagick
       - name: Check out the repository to the runner
         uses: actions/checkout@v4  
       - name: Build LaTex
