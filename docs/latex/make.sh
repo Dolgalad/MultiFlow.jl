@@ -7,7 +7,7 @@ echo $(pwd)
 # Make latex tikz images
 for FILE in ./img/*.tex; do
 	echo $FILE
-	pdflatex -output-directory `dirname $FILE` $FILE > /dev/null 2>&1
+	pdflatex -output-directory `dirname $FILE` $FILE #> /dev/null 2>&1
 	PDFFILE="${FILE%.tex}.pdf"
 	if [ ! -f "$PDFFILE" ]; then
 		echo "PDF output $PDFFILE does not exist. Quitting"
