@@ -12,5 +12,10 @@ docs/src/assets/img/base_instances
 docs/instance
 docs/sol.jld2
 
+docs/src/assets/img/cg_dark.png
+docs/src/assets/img/cg_light.png
+docs/src/assets/img/sparsify_dark.png
+docs/src/assets/img/sparsify_light.png
+
 # datasets
 instances/datasets

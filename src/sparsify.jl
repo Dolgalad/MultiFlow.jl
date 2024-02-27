@@ -6,11 +6,11 @@ Abstract type shared by all Sparsifier models. These are objects who implement t
 abstract type AbstractSparsifier end
 
 """
-    sparsify(sprs::AbstractSparsifier, pb::MCF)
+    sparsify(pb::MCF, sprs::AbstractSparsifier)
 
 Produces the arc-demand classification result. This function needs to be defined for each type of sparsifier.
 """
-function sparsify(sprs::AbstractSparsifier, pb::MCF)
+function sparsify(pb::MCF{T,N}, sprs::AbstractSparsifier) where {T,N}
     throw(ErrorException("Not implemented, typeof(sprs) = $(typeof(sprs)), typeof(pb) = $(typeof(pb))"))
 end
 
@@ -24,20 +24,32 @@ struct SPSparsifier <: AbstractSparsifier
 end
 
 """
-    sparsify(sprs::SPSparsifier, pb::MCF)
+    sparsify(pb::MCF{T,N}, sprs::SPSparsifier) where {T,N}
+
 
 Sparsify the MCF `pb`.
 """
-function sparsify(sprs::SPSparsifier, pb::MCF{T,N}) where {T,N}
-    filter = zeros(Bool, nk(pb), ne(pb))
-    paths = Dict{Tuple{T,T}, Vector{T}}()
-    for demand in pb.demands
-        if (demand.src,demand.dst) in keys(done_list)
-            filter[k, paths[demand.src,demand.dst]] .= 1
+function sparsify(pb::MCF{T,N}, sprs::SPSparsifier; dstmx::AbstractMatrix=cost_matrix(pb)) where {T,N}
+    done_endpoints = Dict{Tuple{T,T}, Int64}()
+    I,J = Vector{Int64}[], Vector{Int64}[]
+    for (k,demand) in enumerate(pb.demands)
+        if (demand.src,demand.dst) in keys(done_endpoints)
+            push!(J, J[done_endpoints[demand.src,demand.dst]])
+            push!(I, k * ones(Int64, size(J[k],1)))
         else
             # look for k shortest paths
-
+            pths = shortest_paths(pb.graph, demand.src, demand.dst, K=sprs.k, dstmx=dstmx)
+            done_endpoints[demand.src,demand.dst] = k
+            if sprs.k==1
+                push!(J, edge_indices(pths, pb.graph))
+                push!(I, k*ones(Int64, size(J[k],1)))
+            else
+                eidx = vcat([edge_indices(p,pb.graph) for p in pths]...)
+                push!(J, eidx)
+                push!(I, k*ones(Int64, size(eidx,1)))
+            end
         end
     end
-    return filter
+    I,J = vcat(I...), vcat(J...)
+    return sparse(I,J,ones(Bool,size(I,1)), nk(pb), ne(pb))
 end

@@ -263,7 +263,7 @@ julia> shortest_paths(g, 1, 9, K=2)
 """
 function shortest_paths(g::AbstractGraph{T}, s::T, t::T; K::Int64=1, dstmx::AbstractMatrix=weights(g)) where {T}
     if K==1
-        return VertexPath(enumerate_paths(dijkstra_shortest_paths(g, s), t))
+        return VertexPath(enumerate_paths(dijkstra_shortest_paths(g, s, dstmx), t))
     else
         return [VertexPath(p) for p in yen_k_shortest_paths(g, s, t, dstmx, K).paths]
     end

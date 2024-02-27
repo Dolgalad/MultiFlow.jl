@@ -80,6 +80,10 @@ function add_JuMP_statistics(ss::SolverStatistics, model::JuMP.Model)
                          JuMP.result_count,
                         ]
     for f in jump_statistics_f
-        ss[String(Symbol(f))] = f(model)
+        try
+            ss[String(Symbol(f))] = f(model)
+        catch
+            println("Failed to retrieve statistic ", String(Symbol(f)))
+        end
     end
 end

@@ -93,7 +93,14 @@ export
     non_saturated_path_exists,
     saturate,
     generate_example,
-    make_dataset
+    make_dataset,
+    # Sparsification
+    AbstractSparsifier,
+    SPSparsifier,
+    sparsify
+
+
+
 
 
 #MultiFlows

@@ -340,12 +340,11 @@ julia> paths_from_arc_flow_values(x[1,:], 1, pb)
 ```
   
 """
-function paths_from_arc_flow_values(x::Vector, k::Int64, pb::MCF)
+function paths_from_arc_flow_values(x::Vector, k::Int64, pb::MCF; tol::Float64=1e-8)
     arc_flows = copy(x)
     demand = pb.demands[k]
     temp_costs = Float64.(costs(pb))
     M = typemax(eltype(temp_costs))
-    #println("cost type ", eltype(temp_costs), ", ", M)
     temp_costs[arc_flows .== 0] .= M
     paths = VertexPath[]
     flows = Float64[]
@@ -361,9 +360,9 @@ function paths_from_arc_flow_values(x::Vector, k::Int64, pb::MCF)
         push!(flows, path_flow)
         # update the arc flow vector
         arc_flows[edge_indices(p, pb.graph)] .-= path_flow
-        temp_costs[arc_flows .== 0] .= M
-        #println(sum(temp_costs .== M))
+        temp_costs[arc_flows .<= tol] .= M
     end
+
     return paths, flows
 end
 
@@ -402,6 +401,7 @@ function solution_from_arc_flow_values(x::AbstractMatrix{Float64}, pb::MCF)
         push!(sol_paths, paths)
         push!(sol_flows, flows)
     end
+
     return MCFSolution(sol_paths, sol_flows)
 end
 
