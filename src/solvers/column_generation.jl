@@ -9,7 +9,12 @@ struct MCFRestrictedMasterProblem
 end
 
 """
-    MCFRestrictedMasterProblem(pb::MCF, direct::Bool=true)
+    MCFRestrictedMasterProblem(pb::MCF;
+                                    direct::Bool=true,
+                                    optimizer::DataType=HiGHS.Optimizer,
+                                    timelimit::Union{Nothing,Real}=nothing,
+                                    bigM_f::Function=p->sum(costs(p))
+    )
 
 Initialize the RMP for MCF problem `pb`. If `direct=true` the LP solver is used in direct mode.
 
@@ -30,11 +35,17 @@ Model (alias for GenericModel{Float64})
 """
 function MCFRestrictedMasterProblem(pb::MCF;
                                     direct::Bool=true,
+                                    optimizer::DataType=HiGHS.Optimizer,
+                                    timelimit::Union{Nothing,Real}=nothing,
+                                    bigM_f::Function=p->sum(costs(p))
     )
     if direct
-        model = JuMP.direct_model(HiGHS.Optimizer())
+        model = JuMP.direct_model(optimizer())
     else
-        model = Model(HiGHS.Optimizer)
+        model = Model(optimizer)
+    end
+    if !isnothing(timelimit)
+        set_time_limit_sec(model, timelimit > 0 ? timelimit : 0)
     end
     set_silent(model)
     for k in 1:nk(pb)
@@ -48,44 +59,71 @@ function MCFRestrictedMasterProblem(pb::MCF;
     # convexity constraints
     @constraint(model, convexity[k in 1:nk(pb)], model[Symbol("x$k")][1] == 1)
     # objective
-    bigM = sum(costs(pb)) * demand_amounts(pb)
+    bigM = bigM_f(pb) * demand_amounts(pb)
     @objective(model, Min, sum(bigM[k] * model[Symbol("x$k")][1] for k in 1:nk(pb)))
     return MCFRestrictedMasterProblem(model, Vector{Vector{Int64}}[[] for _ in 1:nk(pb)])
 end
 
 """
-    MCFPricingProblem
+    make_pricing_graphs(srcs::Vector{Int64}, dsts::Vector{Int64}, csts::Vector, filter::Union{Nothing,AbstractMatrix{Bool}})
+
+Prepare the graphs used for solving the pricing problem. If `filter=nothing` there is only one graph created, otherwise one graph is created for each column in `filter` (i.e. one graph for each demand).
+"""
+function make_pricing_graphs(srcs::Vector{Int64}, dsts::Vector{Int64}, csts::Vector, filter::Union{Nothing,AbstractMatrix{Bool}})
+    if isnothing(filter)
+        return SimpleWeightedDiGraph(srcs,dsts,csts)
+    else
+        return SimpleWeightedDiGraph{eltype(srcs),eltype(csts)}[SimpleWeightedDiGraph(srcs[col],dsts[col],csts[col]) for col in eachcol(filter)]
+
+    end
+end
+
+
+"""
+    MCFPricingProblem{T<:Number,N<:Number,F<:Union{Nothing,AbstractMatrix{Bool}}}
 
 MCF Pricing problem data container.
 """
-struct MCFPricingProblem
-    srcnodes::Vector{Int64}
-    dstnodes::Vector{Int64}
-    demands::Vector{Demand}
-    costs::Vector{Float64}
+struct MCFPricingProblem{T<:Number,N<:Number,F<:Union{Nothing,AbstractMatrix{Bool}}}
+    srcnodes::Vector{T}
+    dstnodes::Vector{T}
+    demands::Vector{Demand{T,N}}
+    costs::Vector{N}
     capacity_duals::Vector{Float64}
     convexity_duals::Vector{Float64}
+    filter::F
+    graphs::Union{Vector{SimpleWeightedDiGraph{T,N}}, SimpleWeightedDiGraph{T,N}}
 end
 
+
 """
-    MCFPricingProblem
+    MCFPricingProblem(pb::MCF; filter::Union{Nothing,AbstractMatrix{Bool}}=nothing)
 
 Pricing problem constructor for problem `pb`.
 
 # Example
-```jldoctest; setup = :(pb = load("../instances/toytests/test1"))
+```jldoctest; setup = :(using Random; Random.seed!(123); pb = load("../instances/toytests/test1"))
 julia> prp = MCFPricingProblem(pb)
-MCFPricingProblem([1, 1, 2, 4, 2, 3, 4, 6, 1, 5], [4, 2, 4, 7, 3, 4, 6, 7, 5, 7], Demand[Demand{Int64, Int64}(1, 7, 5), Demand{Int64, Int64}(2, 6, 5), Demand{Int64, Int64}(3, 7, 5)], [2.0, 3.0, 3.0, 8.0, 4.0, 8.0, 3.0, 3.0, 80.0, 20.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+MCFPricingProblem{Int64, Int64, Nothing}([1, 1, 2, 4, 2, 3, 4, 6, 1, 5], [4, 2, 4, 7, 3, 4, 6, 7, 5, 7], Demand{Int64, Int64}[Demand{Int64, Int64}(1, 7, 5), Demand{Int64, Int64}(2, 6, 5), Demand{Int64, Int64}(3, 7, 5)], [2, 3, 3, 8, 4, 8, 3, 3, 80, 20], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0], nothing, {7, 10} directed simple Int64 graph with Int64 weights)
 
 ```
 """
-function MCFPricingProblem(pb::MCF)
-    return MCFPricingProblem(pb.graph.srcnodes,
+function MCFPricingProblem(pb::MCF; filter::Union{Nothing,AbstractMatrix{Bool}}=nothing)
+    return MCFPricingProblem(
+                             pb.graph.srcnodes,
                              pb.graph.dstnodes,
                              pb.demands, 
                              costs(pb), 
                              zeros(ne(pb)), 
-                             zeros(nk(pb)))
+                             zeros(nk(pb)),
+                             filter,
+                             make_pricing_graphs(
+                                                 pb.graph.srcnodes, 
+                                                 pb.graph.dstnodes, 
+                                                 costs(pb),
+                                                 filter
+                                                )
+                            )
 end
 
 """
@@ -100,11 +138,21 @@ julia> obj, sigma, tau = solve!(rmp)
 
 ```
 """
-function solve!(rmp::MCFRestrictedMasterProblem)
+function solve!(rmp::MCFRestrictedMasterProblem; timelimit::Union{Nothing,Real}=nothing)
+    if !isnothing(timelimit)
+        set_time_limit_sec(rmp.model, timelimit > 0 ? timelimit : 0)
+    end
     optimize!(rmp.model)
-    capacity_duals = [JuMP.dual(c) for c in rmp.model[:capacity]]
-    convexity_duals = [JuMP.dual(c) for c in rmp.model[:convexity]]
-    return JuMP.objective_value(rmp.model), capacity_duals, convexity_duals
+    tstatus = termination_status(rmp.model)
+    if tstatus==OPTIMAL
+        capacity_duals = [JuMP.dual(c) for c in rmp.model[:capacity]]
+        convexity_duals = [JuMP.dual(c) for c in rmp.model[:convexity]]
+        return JuMP.objective_value(rmp.model), capacity_duals, convexity_duals
+    elseif tstatus==TIME_LIMIT
+        return JuMP.objective_value(rmp.model), nothing, nothing
+    else
+        throw(ErrorException("Master problem not solved, status = $(tstatus)"))
+    end
 end
 
 """
@@ -220,6 +268,28 @@ Update the pricing problem data. Sets the values of the capacity and convexity c
 function update_pricing_problem!(prp::MCFPricingProblem, capacity_duals, convexity_duals)
     prp.convexity_duals .= convexity_duals
     prp.capacity_duals .= capacity_duals
+    reduced_costs = prp.costs .- capacity_duals
+    # update graph weights
+    if isnothing(prp.filter)
+        prp.graphs.weights = sparse(prp.dstnodes, prp.srcnodes, reduced_costs, prp.graphs.weights.n, prp.graphs.weights.n)
+    else
+        for (g,col) in zip(prp.graphs, eachcol(prp.filter))
+            g.weights = sparse(prp.dstnodes[col], prp.srcnodes[col], reduced_costs[col], g.weights.n, g.weights.n)
+        end
+    end
+end
+
+"""
+    reduced_cost_graph(prp::MCFPricingProblem, k::Int64)
+
+Get the graph used for solving the pricing problem for demand `k`.
+"""
+function reduced_cost_graph(prp::MCFPricingProblem, k::Int64)
+    if isnothing(prp.filter)
+        return prp.graphs
+    else
+        return prp.graphs[k]
+    end
 end
 
 """
@@ -244,13 +314,13 @@ julia> solve!(prp)
 ```
 """
 function solve!(prp::MCFPricingProblem)
-    columns = [VertexPath[] for _ in 1:size(prp.convexity_duals,1)]
-    # create the graph
-    g = SimpleWeightedDiGraph(prp.srcnodes, prp.dstnodes, prp.costs .- prp.capacity_duals)
+    columns = Vector{VertexPath}[VertexPath[] for _ in 1:size(prp.convexity_duals,1)]
     for (k,demand) in enumerate(prp.demands)
+        g = reduced_cost_graph(prp, k)
         # solve shortest path problem
         ds = dijkstra_shortest_paths(g, demand.src)
         p = VertexPath(enumerate_paths(ds, demand.dst))
+
         if demand.amount * path_weight(p,g) - prp.convexity_duals[k] < -1e-8
             push!(columns[k], p)
         end
@@ -280,10 +350,16 @@ end
 
 """
     solve_column_generation(pb::MCF;
-                                 max_unchanged::Int64=5,
-                                 max_iterations::Int64=100,
-                                 direct::Bool=true,
-                                 return_rmp::Bool=false,
+                            max_unchanged::Int64=5,
+                            max_iterations::Int64=100,
+                            direct::Bool=true,
+                            rmp_solve_callback::Function=(rmp) -> (),
+                            return_rmp::Bool=false,
+                            optimizer::DataType=HiGHS.Optimizer,
+                            timelimit::Union{Nothing,Real}=nothing,
+                            pricing_filter::Union{Nothing,AbstractMatrix{Bool}}=nothing,
+                            bigM_f::Function=p->sum(costs(p))
+
     )
 
 
@@ -295,10 +371,15 @@ Solve MCF problem using Column Generation. Returns a [`MCFSolution`](@ref) objec
 | max_iterations | Maximum number of CG iterations |
 | direct | Use direct solver |
 | rmp_solve_callback | Function called after each resolution of the RMP |
+| return_rmp | If true returns the [`MCFRestrictedMasterProblem`](@ref) |
+| optimizer | Optimizer used |
+| timelimit | Solve time limit in seconds |
+| pricing_filter | Sparsifying matrix used during pricing |
+| bigM_f | A function that takes the MCF instance and returns a real value |
 
 # Example
-```jldoctest; setup = :(using JuMP ; pb = load("../instances/toytests/test1"))
-julia> sol, (rmp, ss) = solve_column_generation(pb);
+```jldoctest; setup = :(using Random, JuMP; Random.seed!(123) ; pb = load("../instances/toytests/test1"))
+julia> sol, (rmp, ss) = solve_column_generation(pb, return_rmp=true);
 
 julia> value.(all_variables(rmp.model))
 9-element Vector{Float64}:
@@ -346,25 +427,34 @@ function solve_column_generation(pb::MCF;
                                  max_iterations::Int64=100,
                                  direct::Bool=true,
                                  rmp_solve_callback::Function=(rmp) -> (),
-                                 return_rmp::Bool=false
+                                 return_rmp::Bool=false,
+                                 optimizer::DataType=HiGHS.Optimizer,
+                                 timelimit::Union{Nothing,Real}=nothing,
+                                 pricing_filter::Union{Nothing,AbstractMatrix{Bool}}=nothing,
+                                 bigM_f::Function=p->sum(costs(p))
     )
     best_rmpsol = 1e30
     tol = 1e-8
     unchanged = 0
     num_cg_iterations = 0
     # initialize master problem
-    master_init_time::Float64 = @elapsed rmp = MCFRestrictedMasterProblem(pb, direct=true)
+    master_init_time::Float64 = @elapsed rmp = MCFRestrictedMasterProblem(pb, direct=true, optimizer=optimizer, timelimit=timelimit, bigM_f=bigM_f)
     # initialize pricing problem
-    pricing_init_time::Float64 = @elapsed prp = MCFPricingProblem(pb)
+    pricing_init_time::Float64 = @elapsed prp = MCFPricingProblem(pb, filter=pricing_filter)
     # master and pricing solve times
-    master_solve_time::Float64, pricing_solve_time::Float64 = 0,0
+    total_master_solve_time::Float64, total_pricing_solve_time::Float64 = 0,0
+    total_pricing_update_time::Float64 = 0
     for i in 1:max_iterations
         # increment counters
         num_cg_iterations += 1
         # reset loop statistics
         n_added_columns = 0
         # solve the restricted master problem
-        master_solve_time += @elapsed rmpsol, sigma, tau  = solve!(rmp)
+        master_solve_time = @elapsed rmpsol, sigma, tau  = solve!(rmp, timelimit=timelimit)
+        total_master_solve_time += master_solve_time
+        if !isnothing(timelimit)
+            timelimit -= master_solve_time
+        end
         rmp_solve_callback(rmp)
         if rmpsol >= best_rmpsol - abs(best_rmpsol) * tol
             unchanged += 1
@@ -376,11 +466,19 @@ function solve_column_generation(pb::MCF;
 
             best_rmpsol = rmpsol
         end
+        # if sigma and tau are nothing means the RMP reached timelimit, break here
+        if isnothing(sigma) && isnothing(tau)
+            break
+        end
 
         # update pricing problem 
-        update_pricing_problem!(prp, sigma, tau)
+        total_pricing_update_time = @elapsed update_pricing_problem!(prp, sigma, tau)
         # solve the pricing problem
-        pricing_solve_time += @elapsed columns = solve!(prp)
+        pricing_solve_time = @elapsed columns = solve!(prp)
+        total_pricing_solve_time += pricing_solve_time
+        if !isnothing(timelimit)
+            timelimit -= pricing_solve_time
+        end
         for k in 1:nk(pb)
             for column in columns[k]
                 # add column to master problem
@@ -398,10 +496,16 @@ function solve_column_generation(pb::MCF;
     add_JuMP_statistics(stats, rmp.model)
     stats["master_init_time"] = master_init_time
     stats["pricing_init_time"] = pricing_init_time
-    stats["master_solve_time"] = master_solve_time
-    stats["pricing_solve_time"] = pricing_solve_time
+    stats["master_solve_time"] = total_master_solve_time
+    stats["pricing_update_time"] = total_pricing_update_time
+    stats["pricing_solve_time"] = total_pricing_solve_time
     stats["num_cg_iterations"] = num_cg_iterations
     stats["num_columns"] = sum(size(columns,1) for columns in rmp.columns)
+    stats["solve_time"] = total_master_solve_time + total_pricing_solve_time # add initialization times ?
 
-    return solution_from_rmp(rmp, pb), (rmp, stats)
+    if return_rmp
+        return solution_from_rmp(rmp, pb), (rmp, stats)
+    else
+        return solution_from_rmp(rmp, pb), stats
+    end
 end

@@ -83,7 +83,7 @@ end
 """
     arc_flow_value(sol::MCFSolution, pb::MCF)
 
-Returns a `(nk(pb), ne(pb))` sized matrix where coefficients `x[k,a]` is the amount of flow for demand `k` circulating through `a`.
+Returns a `(ne(pb), nk(pb))` sized matrix where coefficients `x[a,k]` is the amount of flow for demand `k` circulating through `a`.
 
 # Example
 ```jldoctest; setup = :(using Graphs)
@@ -92,8 +92,21 @@ julia> pb = MCF(grid((3,2)), collect(1:7.), collect(10:16.), [Demand(1,2,1.)]);
 julia> sol = MCFSolution([[VertexPath([1,2]), VertexPath([1,4,5,2])]], [[.5, .5]]);
 
 julia> arc_flow_value(sol, pb)
-1×14 Matrix{Float64}:
- 0.5  0.5  0.0  0.0  0.0  0.5  0.0  0.0  0.0  0.0  0.5  0.0  0.0  0.0
+14×1 Matrix{Float64}:
+ 0.5
+ 0.5
+ 0.0
+ 0.0
+ 0.0
+ 0.5
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 0.5
+ 0.0
+ 0.0
+ 0.0
 
 ```
 """
@@ -101,10 +114,10 @@ function arc_flow_value(sol::MCFSolution, pb::MCF)
     if !is_solution(sol, pb)
         throw(ArgumentError("Provided solution is not valid for the problem"))
     end
-    x = zeros(nk(pb), ne(pb))
+    x = zeros(ne(pb), nk(pb))
     for k in 1:nk(pb)
         for i in 1:length(sol.paths[k])
-            x[k,edge_indices(sol.paths[k][i], pb.graph)] .+= sol.flows[k][i]
+            x[edge_indices(sol.paths[k][i], pb.graph),k] .+= sol.flows[k][i]
         end
     end
     return x
@@ -332,10 +345,23 @@ julia> pb = MCF(grid((3,2)), ones(14), ones(14), [Demand(1,2,2.)]);
 julia> sol = MCFSolution([[VertexPath([1,4,5,2])]], [[1.]]);
 
 julia> x = arc_flow_value(sol, pb)
-1×14 Matrix{Float64}:
- 0.0  1.0  0.0  0.0  0.0  1.0  0.0  0.0  0.0  0.0  1.0  0.0  0.0  0.0
+14×1 Matrix{Float64}:
+ 0.0
+ 1.0
+ 0.0
+ 0.0
+ 0.0
+ 1.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 1.0
+ 0.0
+ 0.0
+ 0.0
 
-julia> paths_from_arc_flow_values(x[1,:], 1, pb)
+julia> paths_from_arc_flow_values(x[:,1], 1, pb)
 (VertexPath[VertexPath{Int64}([1, 4, 5, 2])], [1.0])
 ```
   
@@ -378,8 +404,21 @@ julia> pb = MCF(grid((3,2)), ones(14), ones(14), [Demand(1,2,2.)]);
 julia> sol = MCFSolution([[VertexPath([1,4,5,2])]], [[1.]]);
 
 julia> x = arc_flow_value(sol, pb)
-1×14 Matrix{Float64}:
- 0.0  1.0  0.0  0.0  0.0  1.0  0.0  0.0  0.0  0.0  1.0  0.0  0.0  0.0
+14×1 Matrix{Float64}:
+ 0.0
+ 1.0
+ 0.0
+ 0.0
+ 0.0
+ 1.0
+ 0.0
+ 0.0
+ 0.0
+ 0.0
+ 1.0
+ 0.0
+ 0.0
+ 0.0
 
 julia> solution_from_arc_flow_values(x, pb)
 MCFSolution
@@ -391,13 +430,13 @@ MCFSolution
 """
 function solution_from_arc_flow_values(x::AbstractMatrix{Float64}, pb::MCF)
     # check dimension
-    if size(x) != (nk(pb), ne(pb))
-        throw(DimensionMismatch("Solution dimension does not match problem. Expected $((nk(pb), ne(pb))) and got $(size(x))"))
+    if size(x) != (ne(pb), nk(pb))
+        throw(DimensionMismatch("Solution dimension does not match problem. Expected $((ne(pb), nk(pb))) and got $(size(x))"))
     end
     sol_paths, sol_flows = [], []
     for k in 1:nk(pb)
         # get paths from vector of arc-flows
-        paths, flows = paths_from_arc_flow_values(x[k,:], k, pb)
+        paths, flows = paths_from_arc_flow_values(x[:,k], k, pb)
         push!(sol_paths, paths)
         push!(sol_flows, flows)
     end

@@ -62,7 +62,7 @@ Add statistics of a JuMP model object.
 
 
 """
-function add_JuMP_statistics(ss::SolverStatistics, model::JuMP.Model)
+function add_JuMP_statistics(ss::SolverStatistics, model::JuMP.Model; verbose::Bool=false)
     jump_statistics_f = [
                          JuMP.solver_name,
                          JuMP.termination_status,
@@ -83,7 +83,9 @@ function add_JuMP_statistics(ss::SolverStatistics, model::JuMP.Model)
         try
             ss[String(Symbol(f))] = f(model)
         catch
-            println("Failed to retrieve statistic ", String(Symbol(f)))
+            if verbose
+                @warn "Failed to retrieve statistic " * String(Symbol(f))
+            end
         end
     end
 end
