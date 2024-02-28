@@ -278,6 +278,7 @@ end
                      demand_p::Float64=.05, 
                      amount_factor::Float64=1.05,
                      nK::Int64=nk(pb),
+                     origins_destinations::Tuple{AbstractVector{T},AbstractVector{T}}=demand_endpoints(pb),
                      sample_f::Function=Base.rand,
                      solve_f::Function=solve_column_generation,
                      demand_order_f::Function=identity,
@@ -312,18 +313,19 @@ MCF(nv = 6, ne = 14, nk = 10)
 
 ```
 """
-function generate_example(pb::MCF; 
+function generate_example(pb::MCF{T,N}; 
                           demand_p::Float64=.05, 
                           amount_factor::Float64=1.05,
                           nK::Int64=nk(pb),
+                          origins_destinations::Tuple{AbstractVector{T},AbstractVector{T}}=demand_endpoints(pb),
                           sample_f::Function=Base.rand,
                           solve_f::Function=solve_column_generation,
                           demand_order_f::Function=identity,
                           amount_delta_f::Function=identity
 
-    )
+    ) where {T,N}
     # shake
-    pb_t = shake(pb, nK=nK, sample_f=sample_f)
+    pb_t = shake(pb, nK=nK, sample_f=sample_f, origins_destinations=origins_destinations)
     # saturate
     pb_s,sol_s = saturate(pb_t, solve_f=solve_f, demand_order_f=demand_order_f, amount_delta_f=amount_delta_f)
     # increase demand

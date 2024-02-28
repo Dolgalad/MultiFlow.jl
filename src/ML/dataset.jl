@@ -230,62 +230,62 @@ function load_dataset(dataset_dir::String;
     return graphs
 end
 
-function load_solved_dataset(dataset_dir, solution_dir; scale_instances=true, batchable=true, edge_dir=:double, solver_type="CplexAll")
-    dataset_name = split(dataset_dir, "/")[end-2]
-    println("dataset name : ", dataset_name)
-    graphs = []
-    bar = ProgressBar(filter(f->contains(f,dataset_name) && contains(f,solver_type), readdir(solution_dir)))
-    set_description(bar, "Loading from $(dataset_dir)")
-    # got over solution files
-    for f in bar
-        if contains(f, dataset_name) && contains(f, solver_type)
-            # number
-            d = split(f, "_")
-            instance_number = replace(d[end],solver_type*".csv"=>"")
-            # load instance
-            inst = UMFData(joinpath(dataset_dir, instance_number), edge_dir=edge_dir)
-            # scale cost and capacities
-            if scale_instances
-                inst = scale(inst)
-            end
-            # load solution from csv file
-            try
-                y = load_csv_solution(joinpath(solution_dir, f), inst)
-
-                g = UMFSolver.to_gnngraph(inst, y, feature_type=Float32)
-                
-                push!(graphs, g)
-            catch
-            end
-
-        end
-    end
-    if batchable
-        graphs = make_batchable(graphs)
-    end
-    return graphs
-
-end
-
-"""
-Load single instance
-"""
-function load_instance(inst_path; scale_instance=true)
-    inst = UMFData(inst_path)
-    # scale cost and capacities
-    if scale_instance
-        inst = UMFSolver.scale(inst)
-    end
-    # check if a solution file exists
-    solution_file_path = joinpath(inst_path, "sol.jld")
-    if isfile(solution_file_path)
-        sol = UMFSolver.load_solution(solution_file_path)
-    else
-        ssol, stats = solveUMF(inst_path, "CG", "highs", "./output.txt")
-        sol = ssol.x
-    end
-    y = (sol .> 0)
-    return g = UMFSolver.to_gnngraph(inst, y, feature_type=Float32)
-end
+#function load_solved_dataset(dataset_dir, solution_dir; scale_instances=true, batchable=true, edge_dir=:double, solver_type="CplexAll")
+#    dataset_name = split(dataset_dir, "/")[end-2]
+#    println("dataset name : ", dataset_name)
+#    graphs = []
+#    bar = ProgressBar(filter(f->contains(f,dataset_name) && contains(f,solver_type), readdir(solution_dir)))
+#    set_description(bar, "Loading from $(dataset_dir)")
+#    # got over solution files
+#    for f in bar
+#        if contains(f, dataset_name) && contains(f, solver_type)
+#            # number
+#            d = split(f, "_")
+#            instance_number = replace(d[end],solver_type*".csv"=>"")
+#            # load instance
+#            inst = UMFData(joinpath(dataset_dir, instance_number), edge_dir=edge_dir)
+#            # scale cost and capacities
+#            if scale_instances
+#                inst = scale(inst)
+#            end
+#            # load solution from csv file
+#            try
+#                y = load_csv_solution(joinpath(solution_dir, f), inst)
+#
+#                g = UMFSolver.to_gnngraph(inst, y, feature_type=Float32)
+#                
+#                push!(graphs, g)
+#            catch
+#            end
+#
+#        end
+#    end
+#    if batchable
+#        graphs = make_batchable(graphs)
+#    end
+#    return graphs
+#
+#end
+#
+#"""
+#Load single instance
+#"""
+#function load_instance(inst_path; scale_instance=true)
+#    inst = UMFData(inst_path)
+#    # scale cost and capacities
+#    if scale_instance
+#        inst = UMFSolver.scale(inst)
+#    end
+#    # check if a solution file exists
+#    solution_file_path = joinpath(inst_path, "sol.jld")
+#    if isfile(solution_file_path)
+#        sol = UMFSolver.load_solution(solution_file_path)
+#    else
+#        ssol, stats = solveUMF(inst_path, "CG", "highs", "./output.txt")
+#        sol = ssol.x
+#    end
+#    y = (sol .> 0)
+#    return g = UMFSolver.to_gnngraph(inst, y, feature_type=Float32)
+#end
 
 

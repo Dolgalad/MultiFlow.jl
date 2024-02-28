@@ -11,6 +11,11 @@ using GraphNeuralNetworks
 using MLUtils
 using ProgressBars
 using JLD2
+using ChainRules, ChainRulesCore
+using Statistics
+using Plots
+using LinearAlgebra
+
 #using HDF5
 #using SparseArrays
 #using Graphs
@@ -23,6 +28,21 @@ export augmented_graph,
        # dataset
        load_dataset,
        make_batchable,
+       # metrics
+       accuracy,
+       precision,
+       recall,
+       f_beta_score,
+       graph_reduction,
+       metrics,
+       # plots
+       make_plots,
+       # history
+       last_metrics,
+       last_value,
+       update!,
+       # training
+       train_model,
        # layers
        M3EdgeReverseLayer,
        MLP,
@@ -37,11 +57,11 @@ export augmented_graph,
 
 
 # Machine learning
-#include("./metrics.jl")
-#include("./history.jl")
-#include("./training.jl")
+include("./metrics.jl")
+include("./history.jl")
+include("./training.jl")
 include("./classifier_utils.jl")
-#include("./plots.jl")
+include("./plots.jl")
 #include("./mem_utils.jl")
 #include("./filter.jl")
 include("./augmented_graph.jl")

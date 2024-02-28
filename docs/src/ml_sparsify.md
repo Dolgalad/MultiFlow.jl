@@ -22,6 +22,13 @@ Pages = ["ML/dataset.jl"]
 
 ```
 
+## Evaluation
+```@autodocs
+Modules = [MultiFlows.ML]
+Pages = ["ML/metrics.jl"]
+
+```
+
 ## Layers and utilities
 ```@autodocs
 Modules = [MultiFlows.ML]
