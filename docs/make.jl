@@ -44,6 +44,7 @@ pages_files = [
     ],
     "Sparsification" => [
         "sparsify.md",
+        "ml_sparsify.md",
     ],
     "Installation and development" => [
         "development.md"
@@ -57,7 +58,7 @@ pages = [
     ] for (section_name, section_files) in pages_files
 ]
 
-DocMeta.setdocmeta!(MultiFlows, :DocTestSetup, :(using MultiFlows); recursive=true) 
+DocMeta.setdocmeta!(MultiFlows, :DocTestSetup, :(using MultiFlows,MultiFlows.ML); recursive=true) 
 
 
 makedocs(

@@ -119,4 +119,8 @@ include("solvers/column_generation.jl")
 include("generators.jl")
 include("sparsify.jl")
 
+# ML
+include("ML/ML.jl")
+using .ML
+
 end # module MultiFlows

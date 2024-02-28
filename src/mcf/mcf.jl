@@ -471,3 +471,13 @@ function get_path(pb::MCF{T,N}, s::T, t::T;
     ) where {T,N}
     return VertexPath(alg(s,t))
 end
+
+"""
+    Base.:(==)(p1::MCF{T,N}, p2::MCF{T,N}) where {T,N} 
+
+Check path equality of two [`MCF`](@ref) instances.
+"""
+function Base.:(==)(p1::MCF{T,N}, p2::MCF{T,N}) where {T,N} 
+    return [costs(p1), capacities(p1), demand_endpoints(p1), demand_amounts(p1)] == [costs(p2), capacities(p2), demand_endpoints(p2), demand_amounts(p2)]
+end
+
