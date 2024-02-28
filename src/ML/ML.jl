@@ -9,6 +9,8 @@ using Flux: DataLoader
 using CUDA
 using GraphNeuralNetworks
 using MLUtils
+using ProgressBars
+using JLD2
 #using HDF5
 #using SparseArrays
 #using Graphs
@@ -18,6 +20,9 @@ export augmented_graph,
        get_instance,
        to_gnngraph,
        aggregate_demand_labels,
+       # dataset
+       load_dataset,
+       make_batchable,
        # layers
        M3EdgeReverseLayer,
        MLP,
@@ -40,7 +45,7 @@ include("./classifier_utils.jl")
 #include("./filter.jl")
 include("./augmented_graph.jl")
 #include("./instance_generation.jl")
-#include("./dataset.jl")
+include("./dataset.jl")
 include("./layer_utils.jl")
 include("./model8_definition.jl")
 

@@ -15,6 +15,13 @@ Pages = ["ML/augmented_graph.jl"]
 
 ```
 
+## Datasets
+```@autodocs
+Modules = [MultiFlows.ML]
+Pages = ["ML/dataset.jl"]
+
+```
+
 ## Layers and utilities
 ```@autodocs
 Modules = [MultiFlows.ML]
