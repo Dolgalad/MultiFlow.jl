@@ -1,12 +1,3 @@
-
-function compute_loss(loss_f, x)
-    if x isa GNNGraph
-        return loss_f(x)
-    else
-        return mean(loss_f(g |> device) for g in loader)
-    end
-end
-
 function train_model(model,
                      optimizer,
                      loss,
@@ -42,11 +33,9 @@ function train_model(model,
 
         for g in bar
             # send batch to device
-            # debug
             g = g |> device
 
             # compute gradient
-            #grad = gradient(() -> compute_loss(loss, g), ps)
             batch_loss, grad = Flux.withgradient(model) do m
                 pred = sigmoid(vec(m(g)))
                 labs = vec(g.targets[g.target_mask])
@@ -56,35 +45,9 @@ function train_model(model,
                 loss(pred, labs)
             end
 
-            #grad = gradient(() -> loss(g), ps)
-            #grad = gradient(() -> loss(pred, labs), ps)
-
-            # check if NaN found in gradient
-            #nan_check = [sum(isnan.(grad[p] |> cpu)) > 0 for p in ps if !isnothing(grad[p])]
-            #nothing_check = [isnothing(grad[p] |> cpu) for p in ps]
-            #if any(nothing_check)
-            #    println("nothing found in gradient : ", nothing_check)
-            #end
-            #if any(nan_check)
-            #    for (i,p) in enumerate(ps)
-            #        if any(nan_check[i])
-            #            println("NaN found in gradient of parameter $i")
-            #        end
-            #    end
-            #    throw("NaN found")
-            #end
-
-            # update parameters
-            #Flux.Optimise.update!(optimizer, ps, grad)
             Flux.update!(state, model, grad[1])
 
-            #push!(epoch_losses, Flux.cpu(loss(g)))
-            #push!(epoch_losses, Flux.cpu(loss(pred, labs)))
             push!(epoch_losses, batch_loss)
-
-            #push!(epoch_metrics, metrics(g, model, device=device))
-            #push!(epoch_metrics, metrics(pred, labs))
-
         end
         
 
@@ -94,8 +57,6 @@ function train_model(model,
         
         test_loss = loss(test_dataloader, model)
         update!(history, "test_loss", test_loss)
-        #test_metrics = metrics_loader(test_dataloader, model, device=device)
-        #test_metrics = metrics(test_dataloader, model, device=device)
         test_metrics = metrics(test_dataloader, model)
 
 
