@@ -254,7 +254,7 @@ julia> loader = DataLoader([to_gnngraph(pb, rand(Bool, ne(pb), nk(pb)), feature_
                           )
 10-element DataLoader(::Vector{GNNGraph{Tuple{Vector{Int64}, Vector{Int64}, Nothing}}}, collate=Val{true}())
   with first element:
-  GNNGraph{Tuple{Vector{Int64}, Vector{Int64}, Nothing}}
+  GraphNeuralNetworks.GNNGraphs.GNNGraph{Tuple{Vector{Int64}, Vector{Int64}, Nothing}}
 
 julia> metrics(loader, model)
 Dict{String, Float64} with 5 entries:
