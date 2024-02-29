@@ -63,6 +63,12 @@ Pages = ["ML/history.jl"]
 
 ```
 
+## Training
+```@autodocs
+Modules = [MultiFlows.ML]
+Pages = ["ML/training.jl"]
+
+```
 
 ## Layers and utilities
 ```@autodocs
