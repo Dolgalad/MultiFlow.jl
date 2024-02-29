@@ -188,7 +188,7 @@ GNNGraph:
 ```
 """
 function load_dataset(dataset_dir::String; 
-                      scale_instances::Bool=true, 
+                      scale::Bool=true, 
                       batchable::Bool=true, 
                       edge_dir::Symbol=:double,
                       feature_type::DataType=Float32,
@@ -202,26 +202,7 @@ function load_dataset(dataset_dir::String;
         bar = readdir(dataset_dir, join=true)
     end
     for f in bar
-        # must be a directory containing a link.csv and service.csv 
-        if !is_instance_dir(f)
-            continue
-        end
-
-        inst = MultiFlows.load(f, edge_dir=edge_dir)
-        #println([nv(inst), ne(inst), nk(inst)])
-        # scale cost and capacities
-        if scale_instances
-            inst = scale(inst)
-        end
-        # check if a solution file exists
-        solution_file_path = joinpath(f, "labels.jld2")
-        if isfile(solution_file_path)
-            y = JLD2.load(solution_file_path, "labels")
-            g = to_gnngraph(inst, y, feature_type=feature_type)
-        else
-            g = to_gnngraph(inst, feature_type=feature_type)
-        end
-        
+        g = load_instance(f, scale=scale, feature_type=feature_type)
         push!(graphs, g)
     end
     if batchable
@@ -230,62 +211,27 @@ function load_dataset(dataset_dir::String;
     return graphs
 end
 
-#function load_solved_dataset(dataset_dir, solution_dir; scale_instances=true, batchable=true, edge_dir=:double, solver_type="CplexAll")
-#    dataset_name = split(dataset_dir, "/")[end-2]
-#    println("dataset name : ", dataset_name)
-#    graphs = []
-#    bar = ProgressBar(filter(f->contains(f,dataset_name) && contains(f,solver_type), readdir(solution_dir)))
-#    set_description(bar, "Loading from $(dataset_dir)")
-#    # got over solution files
-#    for f in bar
-#        if contains(f, dataset_name) && contains(f, solver_type)
-#            # number
-#            d = split(f, "_")
-#            instance_number = replace(d[end],solver_type*".csv"=>"")
-#            # load instance
-#            inst = UMFData(joinpath(dataset_dir, instance_number), edge_dir=edge_dir)
-#            # scale cost and capacities
-#            if scale_instances
-#                inst = scale(inst)
-#            end
-#            # load solution from csv file
-#            try
-#                y = load_csv_solution(joinpath(solution_dir, f), inst)
-#
-#                g = UMFSolver.to_gnngraph(inst, y, feature_type=Float32)
-#                
-#                push!(graphs, g)
-#            catch
-#            end
-#
-#        end
-#    end
-#    if batchable
-#        graphs = make_batchable(graphs)
-#    end
-#    return graphs
-#
-#end
-#
-#"""
-#Load single instance
-#"""
-#function load_instance(inst_path; scale_instance=true)
-#    inst = UMFData(inst_path)
-#    # scale cost and capacities
-#    if scale_instance
-#        inst = UMFSolver.scale(inst)
-#    end
-#    # check if a solution file exists
-#    solution_file_path = joinpath(inst_path, "sol.jld")
-#    if isfile(solution_file_path)
-#        sol = UMFSolver.load_solution(solution_file_path)
-#    else
-#        ssol, stats = solveUMF(inst_path, "CG", "highs", "./output.txt")
-#        sol = ssol.x
-#    end
-#    y = (sol .> 0)
-#    return g = UMFSolver.to_gnngraph(inst, y, feature_type=Float32)
-#end
+
+"""
+    load_instance(path::String; scale::Bool=true, feature_type::DataType=Float32)
+
+Load single instance and return a GNNGraph.
+"""
+function load_instance(path::String; scale::Bool=true, feature_type::DataType=Float32)
+    inst = MultiFlows.load(path)
+    # scale cost and capacities
+    if scale
+        inst = MultiFlows.scale(inst)
+    end
+    # check if a solution file exists
+    labels_file_path = joinpath(path, "labels.jld2")
+    if isfile(labels_file_path)
+        y = JLD2.load(labels_file_path, "labels")
+        g = to_gnngraph(inst, y, feature_type=feature_type)
+    else
+        g = to_gnngraph(inst, feature_type=feature_type)
+    end
+    return g
+end
 
 

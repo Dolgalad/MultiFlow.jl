@@ -1,3 +1,14 @@
+"""
+    make_plots(model, g; device=CUDA.functional() ? Flux.gpu : Flux.cpu)
+
+Prepare plots representing the vertex embedding distances and demand vertex embedding distances.
+
+| **Vertex embedding distances** | **Demand vertex embedding distances** |
+| :----------------------------: | :-----------------------------------: |
+| ![](model_plot_ndm.png) | ![](model_plot_dndm.png) |
+
+
+"""
 function make_plots(model, g; device=CUDA.functional() ? Flux.gpu : Flux.cpu)
     # image on test graph 1
     node_codes,_ = compute_graph_embeddings(model, g |> device)

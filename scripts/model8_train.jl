@@ -119,11 +119,11 @@ all_graphs = map(aggregate_demand_labels, all_graphs)
 nnodes = sum(all_graphs[1].ndata.mask)
 println("nnodes : ", nnodes)
 
-train_graphs, test_graphs = MLUtils.splitobs(all_graphs, at=0.9)
+train_graphs, val_graphs = MLUtils.splitobs(all_graphs, at=0.9)
 
 train_loader = DataLoader(train_graphs,
                 batchsize=bs, shuffle=true, collate=true)
-test_loader = DataLoader(test_graphs,
+val_loader = DataLoader(val_graphs,
                batchsize=bs, shuffle=false, collate=true)
 println("done")
 
@@ -159,17 +159,17 @@ logger = TBLogger(tb_log_dir, tb_overwrite)
 
 function TBCallback(epoch, history)
     train_metrics = last_metrics(history, prefix="train")
-    test_metrics = last_metrics(history, prefix="test")
+    val_metrics = last_metrics(history, prefix="val")
 
     with_logger(logger) do
         @info "train" train_metrics... log_step_increment=0
-        @info "test" test_metrics...
-        @info "plot" make_plots(model, test_loader.data[1])... log_step_increment=0
+        @info "val" val_metrics...
+        @info "plot" make_plots(model, val_loader.data[1])... log_step_increment=0
 
     end
 
     #@info "train" train_metrics
-    @info "test" test_metrics
+    @info "val" val_metrics
 
 end
 
@@ -204,12 +204,12 @@ end
 
 # Early stopping
 function es_metric(epoch, history)
-    return last_value(history, "test_loss")
+    return last_value(history, "val_loss")
 end
 es = Flux.early_stopping(es_metric, es_patience, min_dist=1.0f-8, init_score=1.0f8);
 
 # start training
-train_model(model,opt,loss,train_loader,test_loader,
+train_model(model,opt,loss,train_loader,val_loader,
                       callbacks=[TBCallback, save_model_checkpoint, solve_test_dataset],
                       early_stopping=es,
                       epochs=epochs,

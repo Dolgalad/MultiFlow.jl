@@ -1,8 +1,24 @@
+"""
+    train_model(model,
+                optimizer,
+                loss,
+                train_dataloader,
+                val_dataloader;
+                device=CUDA.functional() ? Flux.gpu : Flux.cpu,
+                epochs=100,
+                batchsize=1,
+                callbacks=[],
+                early_stopping=nothing,
+    )
+
+Train `model` using optimizer `optimizer`, minimizing loss function `loss`. 
+
+"""
 function train_model(model,
                      optimizer,
                      loss,
                      train_dataloader,
-                     test_dataloader;
+                     val_dataloader;
                      device=CUDA.functional() ? Flux.gpu : Flux.cpu,
                      epochs=100,
                      batchsize=1,
@@ -15,7 +31,7 @@ function train_model(model,
 
     # training history, this object is passed as second argument to each callback
     history = Dict("train_loss"=>[],
-                   "test_loss"=>[]
+                   "val_loss"=>[]
                   )
 
     
@@ -28,8 +44,8 @@ function train_model(model,
         bar = ProgressBar(train_dataloader)
         set_description(bar, "Epoch $epoch")
 
-        epoch_losses = []
-        epoch_metrics = []
+        epoch_losses = Real[]
+        epoch_metrics = Dict{String,Number}[]
 
         for g in bar
             # send batch to device
@@ -51,16 +67,16 @@ function train_model(model,
         end
         
 
-        # update training and testing history
+        # update training and validation history
         update!(history, "train_loss", mean(vcat(epoch_losses...)))
         update!(history, epoch_metrics, prefix="train")
         
-        test_loss = loss(test_dataloader, model)
-        update!(history, "test_loss", test_loss)
-        test_metrics = metrics(test_dataloader, model)
+        val_loss = loss(val_dataloader, model)
+        update!(history, "val_loss", val_loss)
+        val_metrics = metrics(val_dataloader, model)
 
 
-        update!(history, test_metrics, prefix="test")
+        update!(history, val_metrics, prefix="val")
 
 
         # call callbacks

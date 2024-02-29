@@ -28,6 +28,7 @@ export augmented_graph,
        # dataset
        load_dataset,
        make_batchable,
+       load_instance,
        # metrics
        accuracy,
        precision,
