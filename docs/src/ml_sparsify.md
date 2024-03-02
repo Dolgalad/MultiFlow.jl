@@ -44,7 +44,6 @@ otherdir = vcat(scores[Int64(ne(pb)/2)+1:end], scores[1:Int64(ne(pb)/2)])
 H = vec(maximum(hcat(scores, otherdir), dims=2))
 edgestrokec = com[trunc.(Int64, H * 99) .+ 1]
 nodelabel=["s","","","","","","","","t"]
-nodelabel=collect(1:9)
 draw(PNG("grid3x3_scores.png", 16cm, 16cm), gplot(pb.graph, loc_x, loc_y, nodelabel=nodelabel, edgestrokec=edgestrokec))
 # selected subgraph
 selected = (scores .>= 0.5)
