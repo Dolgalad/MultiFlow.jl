@@ -269,7 +269,9 @@ Dict{String, Float64} with 5 entries:
 function metrics(loader::DataLoader, model)
     dev = check_device(model)
     # debug
+    #mtrcs = [metrics(add_stacked_index(g), model) for g in loader]
     mtrcs = [metrics(g, model) for g in loader]
+
     vs = mean(hcat([collect(values(m)) for m in mtrcs]...), dims=2)
     return Dict(k .=> v for (k,v) in zip(keys(mtrcs[1]), vs))
 end

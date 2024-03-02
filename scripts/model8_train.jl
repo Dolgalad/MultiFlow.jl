@@ -5,8 +5,7 @@ Arguments :
     - batch size
 """
 
-
-ENV["JULIA_CUDA_MEMORY_POOL"] = "none"
+#ENV["JULIA_CUDA_MEMORY_POOL"] = "none"
 ENV["GKSwstype"] = "nul"
 
 using Revise
@@ -38,20 +37,24 @@ println("CUDA.functional: ", CUDA.functional())
 #    exit()
 #end
 #workdir = ENV["TRAIN_WORKDIR"]
-workdir = "."
+if "MULTIFLOWS_WORKDIR" in keys(ENV)
+    workdir = ENV["MULTIFLOWS_WORKDIR"]
+else
+    workdir = "."
+end
 
 # training parameters
 epochs = 10000
 if length(ARGS)>=2
     bs = parse(Int64, ARGS[2])
 else
-    bs = 2
+    bs = 64
 end
 lr = 1.0e-6
-nhidden = 4
-nlayers = 1
+nhidden = 64
+nlayers = 4
 tversky_beta = 0.1
-es_patience = 10
+es_patience = 100
 
 #if length(ARGS)>=1
 #    dataset_path = joinpath(ARGS[1], "train")
@@ -63,9 +66,14 @@ es_patience = 10
 #    test_dataset_path = joinpath(workdir, "datasets", "Oxford_0_1_1", "test")
 #end
 
-dataset_path = "small_dataset"
-dataset_name = "small_dataset"
+dataset_name = "AsnetAm_0_1_1_cgcolumns_rnk0.1_train"
+dataset_path = joinpath(workdir, "datasets", dataset_name)
+
 test_dataset_path = "small_dataset"
+
+if !isdir(dataset_path)
+    throw(ErrorException("Dataset path '$(dataset_path)' not found"))
+end
 
 # model name and save path
 model_name = "model8_l"*string(nlayers)*"_lr"*string(lr)*"_h"*string(nhidden)*"_bs"*string(bs)*"_e"*string(epochs)*"_tversky"*string(tversky_beta)
@@ -113,10 +121,10 @@ println("\ttest solve output directory = ", test_solve_output_dir)
 #end
 
 print("Loading dataset...")
-all_graphs = load_dataset(dataset_path)
+all_graphs = load_dataset(dataset_path)[1:1000]
 all_graphs = map(aggregate_demand_labels, all_graphs)
 
-nnodes = sum(all_graphs[1].ndata.mask)
+nnodes = sum(all_graphs[1].g.ndata.mask)
 println("nnodes : ", nnodes)
 
 train_graphs, val_graphs = MLUtils.splitobs(all_graphs, at=0.9)
@@ -146,7 +154,7 @@ function get_labs(g)
 end
 function loss(loader, m)
     #r = mean(loss(sigmoid(vec(model(g))), vec(g.targets[g.target_mask])) for g in loader)
-    r = mean(loss(sigmoid(vec(model(g |> device))), get_labs(g)) for g in loader)
+    r = mean(loss(sigmoid(vec(model(ag |> device))), get_labs(ag)) for ag in loader)
     return r
 end
 
@@ -164,7 +172,7 @@ function TBCallback(epoch, history)
     with_logger(logger) do
         @info "train" train_metrics... log_step_increment=0
         @info "val" val_metrics...
-        @info "plot" make_plots(model, val_loader.data[1])... log_step_increment=0
+        @info "plot" make_plots(model, val_loader.data[1].g)... log_step_increment=0
 
     end
 
@@ -213,5 +221,6 @@ train_model(model,opt,loss,train_loader,val_loader,
                       callbacks=[TBCallback, save_model_checkpoint, solve_test_dataset],
                       early_stopping=es,
                       epochs=epochs,
+                      steps_per_epoch=30,
                      )
 

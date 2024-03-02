@@ -24,6 +24,8 @@ function train_model(model,
                      batchsize=1,
                      callbacks=[],
                      early_stopping=nothing,
+                     reclaim=false,
+                     steps_per_epoch=nothing
 		     )
 
     # model parameters
@@ -46,9 +48,9 @@ function train_model(model,
 
         epoch_losses = Real[]
         epoch_metrics = Dict{String,Number}[]
-
-        for g in bar
+        for (i,g) in enumerate(bar)
             # send batch to device
+            #g = add_stacked_index(g) |> device
             g = g |> device
 
             # compute gradient
@@ -64,8 +66,12 @@ function train_model(model,
             Flux.update!(state, model, grad[1])
 
             push!(epoch_losses, batch_loss)
+            if !isnothing(steps_per_epoch)
+                if i >= steps_per_epoch
+                    break
+                end
+            end
         end
-        
 
         # update training and validation history
         update!(history, "train_loss", mean(vcat(epoch_losses...)))
@@ -90,11 +96,13 @@ function train_model(model,
                 break
             end
         end
-        # reclaim memory at end of batch
-        GC.gc()
-	if CUDA.functional()
-	    CUDA.reclaim()
-	end
+        if reclaim
+            # reclaim memory at end of batch
+            GC.gc()
+	    if CUDA.functional()
+	        CUDA.reclaim()
+	    end
+        end
     end
 end 
 

@@ -24,11 +24,13 @@ using LinearAlgebra
 export augmented_graph,
        get_instance,
        to_gnngraph,
+       AugmentedGNNGraph,
        aggregate_demand_labels,
        # dataset
        load_dataset,
        make_batchable,
        load_instance,
+       add_stacked_index,
        # metrics
        accuracy,
        precision,

@@ -101,18 +101,65 @@ true
 function make_batchable(gl::Vector{GNNGraph})
     max_k = maximum(g.K for g in gl)
     max_ne = maximum(size(g.targets,1) for g in gl)
+    #max_stacked = maximum(size(g.demand_stacked_idx,1) for g in gl)
     new_graphs = GNNGraph[]
     for g in gl
+        # targets and target mask
         nedges = size(g.targets,1)
         new_targets = zeros(Bool, (max_ne, max_k))
         new_targets[1:nedges, 1:size(g.targets, 2)] .= g.targets
         target_mask = zeros(Bool, (max_ne, max_k))
         target_mask[1:nedges, 1:size(g.targets, 2)] .= 1
-        ng = GNNGraph(g, gdata=(;K=g.K, E=g.E, targets=new_targets, target_mask=target_mask))
+        ## stacked indexes
+        #new_demand_stacked_idx = zeros(Int64, max_stacked)
+        #new_demand_stacked_idx[1:size(g.demand_stacked_idx,1)] .= g.demand_stacked_idx
+        #new_edge_stacked_idx = zeros(Int64, max_stacked)
+        #new_edge_stacked_idx[1:size(g.demand_stacked_idx,1)] .= g.edge_stacked_idx
+        ng = GNNGraph(g, gdata=(;
+                                   K=g.K, 
+                                   E=g.E, 
+                                   targets=new_targets, 
+                                   target_mask=target_mask,
+                                   #demand_stacked_idx=new_demand_stacked_idx,
+                                   #edge_stacked_idx=new_edge_stacked_idx
+                                  )
+                     )
         push!(new_graphs, ng)
     end
-    new_graphs
+    return new_graphs
 end
+
+function make_batchable(gl::Vector{AugmentedGNNGraph})
+    max_k = maximum(ag.g.K for ag in gl)
+    max_ne = maximum(size(ag.g.targets,1) for ag in gl)
+    max_stacked = maximum(size(ag.g.demand_stacked_idx,1) for ag in gl)
+    new_graphs = AugmentedGNNGraph[]
+    for ag in gl
+        # targets and target mask
+        nedges = size(ag.g.targets,1)
+        new_targets = zeros(Bool, (max_ne, max_k))
+        new_targets[1:nedges, 1:size(ag.g.targets, 2)] .= ag.g.targets
+        target_mask = zeros(Bool, (max_ne, max_k))
+        target_mask[1:nedges, 1:size(ag.g.targets, 2)] .= 1
+        # stacked indexes
+        new_demand_stacked_idx = zeros(Int64, max_stacked)
+        new_demand_stacked_idx[1:size(ag.g.demand_stacked_idx,1)] .= ag.g.demand_stacked_idx
+        new_edge_stacked_idx = zeros(Int64, max_stacked)
+        new_edge_stacked_idx[1:size(ag.g.demand_stacked_idx,1)] .= ag.g.edge_stacked_idx
+        ng = GNNGraph(ag.g, gdata=(;
+                                   K=ag.g.K, 
+                                   E=ag.g.E, 
+                                   targets=new_targets, 
+                                   target_mask=target_mask,
+                                   demand_stacked_idx=new_demand_stacked_idx,
+                                   edge_stacked_idx=new_edge_stacked_idx
+                                  )
+                     )
+        push!(new_graphs, AugmentedGNNGraph(ng))
+    end
+    return new_graphs
+end
+
 """
     load_dataset(dataset_dir::String; 
                       scale_instances::Bool=true, 
@@ -194,7 +241,8 @@ function load_dataset(dataset_dir::String;
                       feature_type::DataType=Float32,
                       show_progress::Bool=false
     )
-    graphs = GNNGraph[]
+    graphs = AugmentedGNNGraph[]
+
     if show_progress
         bar = ProgressBar(readdir(dataset_dir, join=true))
         set_description(bar, "Loading data $(dataset_dir)")
@@ -231,7 +279,90 @@ function load_instance(path::String; scale::Bool=true, feature_type::DataType=Fl
     else
         g = to_gnngraph(inst, feature_type=feature_type)
     end
-    return g
+    # TODO: adding stacked indexes here slows things down for some reason ?
+    g = add_stacked_index(g)
+    return AugmentedGNNGraph(g)
+end
+
+"""
+    add_stacked_index(g::GNNGraph)
+"""
+function add_stacked_index(g::GNNGraph)
+    # create the demand and edge stacking indexes
+    egind = graph_indicator(g, edges=true)
+    regind = egind[g.edata.mask]
+    niedges = sum(g.edata.mask[egind .== 1]) # same number of edges in each graph
+    ngind = graph_indicator(g)
+    dgind = ngind[.!g.ndata.mask]
+    dind = 1:size(dgind,1)
+    reind = 1:size(regind,1)
+    demand_stacked_idx = reduce(vcat,[repeat(dind[dgind .== i], inner=niedges) for i=1:g.num_graphs])
+    edge_stacked_idx = reduce(vcat, [repeat(reind[regind .== i], g.K[i]) for i=1:g.num_graphs])
+    nstack = size(demand_stacked_idx,1)
+    if nstack % g.num_graphs == 0
+        _demand_stacked_idx = zeros(Int64, Int64(nstack / g.num_graphs), g.num_graphs)
+        _demand_stacked_idx[:] .= demand_stacked_idx
+        _edge_stacked_idx = zeros(Int64, Int64(nstack / g.num_graphs), g.num_graphs)
+        _edge_stacked_idx[:] .= edge_stacked_idx
+    else
+        _demand_stacked_idx = zeros(Int64, 1 + trunc(Int64, nstack / g.num_graphs), g.num_graphs)
+        _demand_stacked_idx[1:nstack] .= demand_stacked_idx
+        _edge_stacked_idx = zeros(Int64, 1 + trunc(Int64, nstack / g.num_graphs), g.num_graphs)
+        _edge_stacked_idx[1:nstack] .= edge_stacked_idx
+    end
+
+    GNNGraph(g, 
+                 ndata=g.ndata, 
+                 edata=g.edata, 
+                 gdata=(;
+                        g.gdata..., 
+                        demand_stacked_idx=_demand_stacked_idx,
+                        edge_stacked_idx=_edge_stacked_idx
+                       )
+                )
 end
 
 
+"""
+    Flux.batch(gs::AbstractVector{AugmentedGNNGraph}
+
+Batch a list of `AugmentedGNNGraph` objects.
+"""
+function Flux.batch(gs::AbstractVector{AugmentedGNNGraph})
+    v_num_nodes = [ag.g.num_nodes for ag in gs]
+    edge_indices = [edge_index(ag.g) for ag in gs]
+    nodesum = cumsum([0; v_num_nodes])[1:(end - 1)]
+    s = GraphNeuralNetworks.GNNGraphs.cat_features([ei[1] .+ nodesum[ii] for (ii, ei) in enumerate(edge_indices)])
+    t = GraphNeuralNetworks.GNNGraphs.cat_features([ei[2] .+ nodesum[ii] for (ii, ei) in enumerate(edge_indices)])
+    w = GraphNeuralNetworks.GNNGraphs.cat_features([get_edge_weight(ag.g) for ag in gs])
+    graph = (s, t, w)
+
+    function materialize_graph_indicator(ag)
+        ag.g.graph_indicator === nothing ? ones_like(s, ag.g.num_nodes) : ag.g.graph_indicator
+    end
+
+    v_gi = materialize_graph_indicator.(gs)
+    v_num_graphs = [ag.g.num_graphs for ag in gs]
+    graphsum = cumsum([0; v_num_graphs])[1:(end - 1)]
+    v_gi = [ng .+ gi for (ng, gi) in zip(graphsum, v_gi)]
+    graph_indicator = GraphNeuralNetworks.GNNGraphs.cat_features(v_gi)
+
+    g = GNNGraph(graph,
+                 sum(v_num_nodes),
+                 sum([ag.g.num_edges for ag in gs]),
+                 sum(v_num_graphs),
+                 graph_indicator,
+                 GraphNeuralNetworks.GNNGraphs.cat_features([ag.g.ndata for ag in gs]),
+                 GraphNeuralNetworks.GNNGraphs.cat_features([ag.g.edata for ag in gs]),
+                 GraphNeuralNetworks.GNNGraphs.cat_features([ag.g.gdata for ag in gs])
+                )
+    if haskey(g.gdata, :demand_stacked_idx)
+        if g.num_graphs > 1
+            for i in 2:g.num_graphs
+                g.demand_stacked_idx[g.demand_stacked_idx[:,i] .> 0, i] .+= g.K[i-1]
+                g.edge_stacked_idx[g.edge_stacked_idx[:,i] .> 0, i] .+= g.E[i-1]
+            end
+        end
+    end
+    return g
+end

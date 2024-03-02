@@ -13,16 +13,6 @@ struct AugmentedGraph
 end
 
 
-#"""
-#    digraph(pb::MCF)
-#
-#Converts a [`MCF`](@ref) object to a SimpleDiGraph
-#"""
-#function digraph(pb::MCF)
-#    return SimpleDiGraph(pb.graph)
-#end
-
-
 """
     augmented_graph(pb::MCF)
 
@@ -360,4 +350,23 @@ function aggregate_demand_labels(g::GNNGraph)
     end
     return g
 end
+
+"""
+    AugmentedGNNGraph
+
+A simple container for the GNNGraph representation of a MCF problem. Usefull for specializing the `batch` method for our use case.
+"""
+struct AugmentedGNNGraph
+    g::GNNGraph
+end
+
+"""
+    aggregate_demand_labels(ag::AugmentedGNNGraph)
+
+Aggregate demand labels.
+"""
+function aggregate_demand_labels(ag::AugmentedGNNGraph)
+    return AugmentedGNNGraph(aggregate_demand_labels(ag.g))
+end
+
 

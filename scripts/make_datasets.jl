@@ -21,7 +21,11 @@ using Tar
 Random.seed!(2023) # for reproducability
 
 base_instance_dir = "./instances/sndlib"
-dataset_dir = "./instances/datasets"
+if "MULTIFLOWS_DATADIR" in keys(ENV)
+    dataset_dir = ENV["MULTIFLOWS_DATADIR"]
+else
+    dataset_dir = "./instances/datasets"
+end
 mkpath(dataset_dir)
 
 n_train = 10000
@@ -45,9 +49,9 @@ function cgcolumns(instance_path)
         JSON.print(f, stats, 4)
     end
     # create the labels
-    labels = zeros(Bool, nk(pb), ne(pb))
+    labels = zeros(Bool, ne(pb), nk(pb))
     for k in 1:nk(pb)
-        labels[k, vcat(rmp.columns[k]...)] .= 1
+        labels[vcat(rmp.columns[k]...), k] .= 1
     end
     labels_path = joinpath(instance_path, "labels.jld2")
     jldsave(labels_path; labels)
@@ -79,22 +83,31 @@ for base_instance_path in readdir(base_instance_dir, join=true)
         # train dataset
         train_dataset_name = join([base_instance_name, v.first, "train"], "_")
         train_dataset_path = joinpath(dataset_dir, train_dataset_name)
-        make_dataset(pb, n_train, train_dataset_path, 
+        make_dataset(pb, n_train, train_dataset_name, 
                      progress_prefix="$(train_dataset_name): ", 
                      overwrite=overwrite,
                      perturbation_f=v.second[1],
                      labeling_f=v.second[2], 
                     )
+	println("Moving dataset $(train_dataset_name) to $(train_dataset_path)")
+	mkpath(train_dataset_path)
+	mv(train_dataset_name, train_dataset_path, force=true)
+
 
         # test dataset
         test_dataset_name = join([base_instance_name, v.first, "test"], "_")
         test_dataset_path = joinpath(dataset_dir, test_dataset_name)
-        make_dataset(pb, n_train, test_dataset_path, 
+	println("Saving dataset $(test_dataset_name) to $(test_dataset_path)")
+        make_dataset(pb, n_test, test_dataset_name, 
                      progress_prefix="$(test_dataset_name): ", 
                      overwrite=overwrite,
                      perturbation_f=v.second[1],
                      labeling_f=v.second[2], 
 
                     )
+	println("Moving dataset $(test_dataset_name) to $(test_dataset_path)")
+	mkpath(test_dataset_path)
+	mv(test_dataset_name, test_dataset_path, force=true)
+
     end
 end
