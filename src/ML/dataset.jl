@@ -206,12 +206,12 @@ julia> make_dataset(pb, 5, "small_dataset",
 Now load the instances. By default `load_dataset` ensures that the graph features are batchable.
 ```jldoctest loaddataset
 julia> d = load_dataset("small_dataset")
-5-element Vector{GNNGraph}:
- GNNGraph(7, 14) with mask: 7-element, (e: 3×14, demand_amounts_mask: 14-element, mask: 14-element, demand_to_source_mask: 14-element, target_to_demand_mask: 14-element), (targets: 8×4×1, K: 0-dimensional, target_mask: 8×4×1, E: 0-dimensional) data
- GNNGraph(6, 12) with mask: 6-element, (e: 3×12, demand_amounts_mask: 12-element, mask: 12-element, demand_to_source_mask: 12-element, target_to_demand_mask: 12-element), (targets: 8×4×1, K: 0-dimensional, target_mask: 8×4×1, E: 0-dimensional) data
- GNNGraph(6, 12) with mask: 6-element, (e: 3×12, demand_amounts_mask: 12-element, mask: 12-element, demand_to_source_mask: 12-element, target_to_demand_mask: 12-element), (targets: 8×4×1, K: 0-dimensional, target_mask: 8×4×1, E: 0-dimensional) data
- GNNGraph(6, 12) with mask: 6-element, (e: 3×12, demand_amounts_mask: 12-element, mask: 12-element, demand_to_source_mask: 12-element, target_to_demand_mask: 12-element), (targets: 8×4×1, K: 0-dimensional, target_mask: 8×4×1, E: 0-dimensional) data
- GNNGraph(8, 16) with mask: 8-element, (e: 3×16, demand_amounts_mask: 16-element, mask: 16-element, demand_to_source_mask: 16-element, target_to_demand_mask: 16-element), (targets: 8×4×1, K: 0-dimensional, target_mask: 8×4×1, E: 0-dimensional) data
+5-element Vector{AugmentedGNNGraph}:
+ AugmentedGNNGraph(GNNGraph(7, 14) with mask: 7-element, (e: 3×14, demand_amounts_mask: 14-element, mask: 14-element, demand_to_source_mask: 14-element, target_to_demand_mask: 14-element), (edge_stacked_idx: 32×1, targets: 8×4×1, K: 0-dimensional, demand_stacked_idx: 32×1, target_mask: 8×4×1, E: 0-dimensional) data)
+ AugmentedGNNGraph(GNNGraph(6, 12) with mask: 6-element, (e: 3×12, demand_amounts_mask: 12-element, mask: 12-element, demand_to_source_mask: 12-element, target_to_demand_mask: 12-element), (edge_stacked_idx: 32×1, targets: 8×4×1, K: 0-dimensional, demand_stacked_idx: 32×1, target_mask: 8×4×1, E: 0-dimensional) data)
+ AugmentedGNNGraph(GNNGraph(6, 12) with mask: 6-element, (e: 3×12, demand_amounts_mask: 12-element, mask: 12-element, demand_to_source_mask: 12-element, target_to_demand_mask: 12-element), (edge_stacked_idx: 32×1, targets: 8×4×1, K: 0-dimensional, demand_stacked_idx: 32×1, target_mask: 8×4×1, E: 0-dimensional) data)
+ AugmentedGNNGraph(GNNGraph(6, 12) with mask: 6-element, (e: 3×12, demand_amounts_mask: 12-element, mask: 12-element, demand_to_source_mask: 12-element, target_to_demand_mask: 12-element), (edge_stacked_idx: 32×1, targets: 8×4×1, K: 0-dimensional, demand_stacked_idx: 32×1, target_mask: 8×4×1, E: 0-dimensional) data)
+ AugmentedGNNGraph(GNNGraph(8, 16) with mask: 8-element, (e: 3×16, demand_amounts_mask: 16-element, mask: 16-element, demand_to_source_mask: 16-element, target_to_demand_mask: 16-element), (edge_stacked_idx: 32×1, targets: 8×4×1, K: 0-dimensional, demand_stacked_idx: 32×1, target_mask: 8×4×1, E: 0-dimensional) data)
 
 julia> batch(d)
 GNNGraph:
@@ -227,8 +227,10 @@ GNNGraph:
 	demand_to_source_mask = 66-element Vector{Bool}
 	target_to_demand_mask = 66-element Vector{Bool}
   gdata:
+	edge_stacked_idx = 32×5 Matrix{Int64}
 	targets = 8×4×5 Array{Bool, 3}
 	K = 5-element Vector{Int64}
+	demand_stacked_idx = 32×5 Matrix{Int64}
 	target_mask = 8×4×5 Array{Bool, 3}
 	E = 5-element Vector{Int64}
 
