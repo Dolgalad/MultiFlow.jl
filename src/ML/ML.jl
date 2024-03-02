@@ -1,7 +1,7 @@
 module ML
 
 using MultiFlows
-import MultiFlows: demand_endpoints, demand_amounts
+import MultiFlows: demand_endpoints, demand_amounts, sparsify
 
 using Graphs
 using Flux
@@ -15,6 +15,7 @@ using ChainRules, ChainRulesCore
 using Statistics
 using Plots
 using LinearAlgebra
+using SimpleWeightedGraphs
 
 #using HDF5
 #using SparseArrays
@@ -56,7 +57,10 @@ export augmented_graph,
        # M8ClassifierModel
        M8MPLayer,
        M8ClassifierModel,
-       compute_graph_embeddings
+       compute_graph_embeddings,
+       # ML sparsifier
+       m8_post_processing,
+       M8MLSparsifier
 
 
 # Machine learning
@@ -72,5 +76,6 @@ include("./augmented_graph.jl")
 include("./dataset.jl")
 include("./layer_utils.jl")
 include("./model8_definition.jl")
+include("./model8_sparsify.jl")
 
 end # module

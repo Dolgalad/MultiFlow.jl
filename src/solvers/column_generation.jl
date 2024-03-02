@@ -321,7 +321,7 @@ function solve!(prp::MCFPricingProblem)
         ds = dijkstra_shortest_paths(g, demand.src)
         p = VertexPath(enumerate_paths(ds, demand.dst))
 
-        if demand.amount * path_weight(p,g) - prp.convexity_duals[k] < -1e-8
+        if !isempty(p) && demand.amount * path_weight(p,g) - prp.convexity_duals[k] < -1e-8
             push!(columns[k], p)
         end
     end
@@ -502,6 +502,11 @@ function solve_column_generation(pb::MCF;
     stats["num_cg_iterations"] = num_cg_iterations
     stats["num_columns"] = sum(size(columns,1) for columns in rmp.columns)
     stats["solve_time"] = total_master_solve_time + total_pricing_solve_time # add initialization times ?
+    if !isnothing(pricing_filter)
+        stats["graph_reduction"] = 100 * sum(pricing_filter .== 0) / prod(size(pricing_filter))
+    else
+        stats["graph_reduction"] = 0.0
+    end
 
     if return_rmp
         return solution_from_rmp(rmp, pb), (rmp, stats)
