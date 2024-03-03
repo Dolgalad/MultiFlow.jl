@@ -24,8 +24,10 @@ GNNGraph:
 	demand_to_source_mask = 14-element Vector{Bool}
 	target_to_demand_mask = 14-element Vector{Bool}
   gdata:
+	edge_stacked_idx = 24×1 Matrix{Int64}
 	targets = 8×3×1 BitArray{3}
 	K = 3
+	demand_stacked_idx = 24×1 Matrix{Int64}
 	E = 8
 
 julia> pb2 = MCF(grid((2,3)), rand(7), rand(7), [Demand(1,4,1.), Demand(1,4,1.), Demand(3,2,1.)]);
@@ -47,8 +49,10 @@ GNNGraph:
 	demand_to_source_mask = 20-element Vector{Bool}
 	target_to_demand_mask = 20-element Vector{Bool}
   gdata:
+	edge_stacked_idx = 42×1 Matrix{Int64}
 	targets = 14×3×1 BitArray{3}
 	K = 3
+	demand_stacked_idx = 42×1 Matrix{Int64}
 	E = 14
 
 ```
@@ -56,7 +60,7 @@ GNNGraph:
 If we try to create a batch of `gnn1` and `gnn2` a `DimensionMismatch` error is raised : 
 ```jldoctest makebatch
 julia> batch([gnn1, gnn2])
-ERROR: DimensionMismatch("mismatch in dimension 1 (expected 8 got 14)")
+ERROR: DimensionMismatch("mismatch in dimension 1 (expected 24 got 42)")
 [...]
 ```
 
