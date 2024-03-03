@@ -241,18 +241,27 @@ function load_dataset(dataset_dir::String;
                       batchable::Bool=true, 
                       edge_dir::Symbol=:double,
                       feature_type::DataType=Float32,
-                      show_progress::Bool=false
+                      show_progress::Bool=false,
+                      transform_f::Union{Nothing,Function}=nothing,
+                      max_n::Union{Nothing,Int64}=nothing
     )
     graphs = AugmentedGNNGraph[]
+    bar = readdir(dataset_dir, join=true)
+    if !isnothing(max_n)
+        if length(bar) > max_n
+            bar = bar[1:max_n]
+        end
+    end
 
     if show_progress
-        bar = ProgressBar(readdir(dataset_dir, join=true))
+        bar = ProgressBar(bar)
         set_description(bar, "Loading data $(dataset_dir)")
-    else
-        bar = readdir(dataset_dir, join=true)
-    end
+    end 
     for f in bar
         g = load_instance(f, scale=scale, feature_type=feature_type)
+        if !isnothing(transform_f)
+            g = transform_f(g)
+        end
         push!(graphs, g)
     end
     if batchable
@@ -284,44 +293,6 @@ function load_instance(path::String; scale::Bool=true, feature_type::DataType=Fl
     # TODO: adding stacked indexes here slows things down for some reason ?
     g = add_stacked_index(g)
     return AugmentedGNNGraph(g)
-end
-
-"""
-    add_stacked_index(g::GNNGraph)
-"""
-function add_stacked_index(g::GNNGraph)
-    # create the demand and edge stacking indexes
-    egind = graph_indicator(g, edges=true)
-    regind = egind[g.edata.mask]
-    niedges = sum(g.edata.mask[egind .== 1]) # same number of edges in each graph
-    ngind = graph_indicator(g)
-    dgind = ngind[.!g.ndata.mask]
-    dind = 1:size(dgind,1)
-    reind = 1:size(regind,1)
-    demand_stacked_idx = reduce(vcat,[repeat(dind[dgind .== i], inner=niedges) for i=1:g.num_graphs])
-    edge_stacked_idx = reduce(vcat, [repeat(reind[regind .== i], g.K[i]) for i=1:g.num_graphs])
-    nstack = size(demand_stacked_idx,1)
-    if nstack % g.num_graphs == 0
-        _demand_stacked_idx = zeros(Int64, Int64(nstack / g.num_graphs), g.num_graphs)
-        _demand_stacked_idx[:] .= demand_stacked_idx
-        _edge_stacked_idx = zeros(Int64, Int64(nstack / g.num_graphs), g.num_graphs)
-        _edge_stacked_idx[:] .= edge_stacked_idx
-    else
-        _demand_stacked_idx = zeros(Int64, 1 + trunc(Int64, nstack / g.num_graphs), g.num_graphs)
-        _demand_stacked_idx[1:nstack] .= demand_stacked_idx
-        _edge_stacked_idx = zeros(Int64, 1 + trunc(Int64, nstack / g.num_graphs), g.num_graphs)
-        _edge_stacked_idx[1:nstack] .= edge_stacked_idx
-    end
-
-    GNNGraph(g, 
-                 ndata=g.ndata, 
-                 edata=g.edata, 
-                 gdata=(;
-                        g.gdata..., 
-                        demand_stacked_idx=_demand_stacked_idx,
-                        edge_stacked_idx=_edge_stacked_idx
-                       )
-                )
 end
 
 
@@ -360,9 +331,10 @@ function Flux.batch(gs::AbstractVector{AugmentedGNNGraph})
                 )
     if haskey(g.gdata, :demand_stacked_idx)
         if g.num_graphs > 1
+            cumK, cumE = cumsum(g.K), cumsum(g.E)
             for i in 2:g.num_graphs
-                g.demand_stacked_idx[g.demand_stacked_idx[:,i] .> 0, i] .+= g.K[i-1]
-                g.edge_stacked_idx[g.edge_stacked_idx[:,i] .> 0, i] .+= g.E[i-1]
+                g.demand_stacked_idx[g.demand_stacked_idx[:,i] .> 0, i] .+= cumK[i-1] #sum(g.K[1:i-1])
+                g.edge_stacked_idx[g.edge_stacked_idx[:,i] .> 0, i] .+= cumE[i-1] #sum(g.E[1:i-1])
             end
         end
     end

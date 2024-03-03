@@ -68,20 +68,38 @@ function compute_edge_demand_scores(model,
 
         # stack repeated demand codes
         dind = collect(1:size(dgind,1)) |> model._device
-        demand_stacked_idx = reduce(vcat,[repeat(dind[dgind .== i], inner=niedges) for i=1:g.num_graphs])
-        demand_stacked = getobs(demand_codes,demand_stacked_idx)
+        demand_stacked_idx_1 = reduce(vcat,[repeat(dind[dgind .== i], inner=niedges) for i=1:g.num_graphs])
+        demand_stacked_1 = getobs(demand_codes,demand_stacked_idx_1)
 
 
         # stacked repeated edge codes
         reind = collect(1:size(regind,1)) |> model._device
         #edge_stacked_idx = reduce(vcat, [repeat(reind[regind .== i], nidemands) for i=1:g.num_graphs])
-        edge_stacked_idx = reduce(vcat, [repeat(reind[regind .== i], g.K[i]) for i=1:g.num_graphs])
+        edge_stacked_idx_1 = reduce(vcat, [repeat(reind[regind .== i], g.K[i]) for i=1:g.num_graphs])
 
-        edge_stacked = getobs(edge_codes, edge_stacked_idx)
+        edge_stacked_1 = getobs(edge_codes, edge_stacked_idx_1)
     else
         # TODO: debug
-        demand_stacked = obsview(demand_codes,g.demand_stacked_idx[g.demand_stacked_idx .> 0])
-        edge_stacked = obsview(edge_codes, g.edge_stacked_idx[g.edge_stacked_idx .> 0])
+        demand_stacked = getobs(demand_codes,
+                                obsview(vec(g.demand_stacked_idx), vec(g.demand_stacked_idx .> 0))
+                                )
+        edge_stacked = getobs(edge_codes, 
+                              obsview(vec(g.edge_stacked_idx), vec(g.edge_stacked_idx .> 0))
+                              )
+        #println([edge_stacked == edge_stacked_1, demand_stacked == demand_stacked_1])
+        #println([edge_stacked_idx_1 == g.edge_stacked_idx[g.edge_stacked_idx .> 0]])
+        #println([demand_stacked_idx_1 == g.demand_stacked_idx[g.demand_stacked_idx .> 0]])
+
+        #println(sum(edge_stacked_idx_1))
+        #println(sum(g.edge_stacked_idx[g.edge_stacked_idx .> 0]))
+        #println(sum(demand_stacked_idx_1))
+        #println(sum(g.demand_stacked_idx[g.demand_stacked_idx .> 0]))
+        #println([minimum(edge_stacked_idx_1), maximum(edge_stacked_idx_1)])
+        #println([minimum(g.edge_stacked_idx), maximum(g.edge_stacked_idx)])
+        #println([minimum(demand_stacked_idx_1), maximum(demand_stacked_idx_1)])
+        #println([minimum(g.demand_stacked_idx), maximum(g.demand_stacked_idx)])
+
+        #println()
     end
 
 

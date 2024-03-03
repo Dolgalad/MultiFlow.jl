@@ -210,6 +210,8 @@ function compute_graph_embeddings(model::M8ClassifierModel, g::GNNGraph)
         end
     end
 
+    #println("types : ", [typeof(encoded_nodes), typeof(_encoded_edges)])
+
     return encoded_nodes, _encoded_edges
 
 end

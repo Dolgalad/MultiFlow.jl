@@ -11,12 +11,12 @@ ENV["GKSwstype"] = "nul"
 using Revise
 
 using MultiFlows, MultiFlows.ML
-
+using ProgressBars
 using Plots
 using GraphNeuralNetworks, Graphs, Flux, CUDA, Statistics, MLUtils
 using Flux: DataLoader
 using Flux.Losses: logitbinarycrossentropy, binary_focal_loss, mean, logsoftmax
-
+using DataFrames, CSV
 using TensorBoardLogger
 using Logging
 using LinearAlgebra
@@ -27,6 +27,7 @@ using Random: seed!
 # set the seed
 seed!(2023)
 
+CUDA.allowscalar(false)
 device = CUDA.functional() ? Flux.gpu : Flux.cpu;
 
 println("CUDA.functional: ", CUDA.functional())
@@ -48,13 +49,14 @@ epochs = 10000
 if length(ARGS)>=2
     bs = parse(Int64, ARGS[2])
 else
-    bs = 64
+    bs = 32
 end
 lr = 1.0e-6
 nhidden = 64
 nlayers = 4
 tversky_beta = 0.1
 es_patience = 100
+solve_interval = 10
 
 #if length(ARGS)>=1
 #    dataset_path = joinpath(ARGS[1], "train")
@@ -69,8 +71,6 @@ es_patience = 100
 dataset_name = "AsnetAm_0_1_1_cgcolumns_rnk0.1_train"
 dataset_path = joinpath(workdir, "datasets", dataset_name)
 
-test_dataset_path = "small_dataset"
-
 if !isdir(dataset_path)
     throw(ErrorException("Dataset path '$(dataset_path)' not found"))
 end
@@ -78,6 +78,9 @@ end
 # model name and save path
 model_name = "model8_l"*string(nlayers)*"_lr"*string(lr)*"_h"*string(nhidden)*"_bs"*string(bs)*"_e"*string(epochs)*"_tversky"*string(tversky_beta)
 save_path = joinpath(workdir, "models", dataset_name, model_name)
+if isdir(save_path)
+    rm(save_path, force=true, recursive=true)
+end
 mkpath(save_path)
 
 # tensorboard logging directory
@@ -85,9 +88,10 @@ tb_log_dir = joinpath(workdir, "tb_logs", dataset_name, model_name)
 
 # testing solve output dir
 test_solve_output_dir = joinpath(workdir, "solve_outputs", dataset_name, model_name)
-# default solver
-output_dir_default = joinpath(test_solve_output_dir, "default")
-mkpath(output_dir_default)
+if isdir(test_solve_output_dir)
+    rm(test_solve_output_dir, force=true, recursive=true)
+end
+mkpath(test_solve_output_dir)
 
 
 # print summary
@@ -95,14 +99,13 @@ println("Training summary")
 println("\tWorkdir                     = ", workdir)
 println("\tepochs                      = ", epochs)
 println("\tbatch size                  = ", bs)
-println("\tlearning rate               = ", lr)
+println("\tlearning rate (effective)   = ", lr, " (", bs*lr, ")")
 println("\thidden dimension            = ", nhidden)
 println("\tGCN layers                  = ", nlayers)
 println("\ttversky beta                = ", tversky_beta)
 println("\tearly stopping patience     = ", es_patience)
 println("\ttrain dataset               = ", dataset_path)
 println("\tdataset name                = ", dataset_name)
-println("\ttest dataset                = ", test_dataset_path)
 println("\tmodel name                  = ", model_name)
 println("\tcheckpoint directory        = ", save_path)
 println("\tTensorBoard directory       = ", tb_log_dir)
@@ -110,7 +113,7 @@ println("\ttest solve output directory = ", test_solve_output_dir)
 
 
 # run once for compilation
-#inst = UMFSolver.scale(UMFData(joinpath(test_dataset_path, "1")))
+
 ##solveUMF(inst,"CG","highs","./output.txt")
 ##solveUMF(inst,"CG","highs","./output.txt","","clssp model5_test_checkpoint.bson 1")
 #for inst_dir in readdir(test_dataset_path, join=true)
@@ -121,8 +124,9 @@ println("\ttest solve output directory = ", test_solve_output_dir)
 #end
 
 print("Loading dataset...")
-all_graphs = load_dataset(dataset_path)[1:1000]
-all_graphs = map(aggregate_demand_labels, all_graphs)
+# TODO: not enough memory on my machine for whole dataset
+all_graphs = load_dataset(dataset_path, transform_f=aggregate_demand_labels, show_progress=true, max_n=1000)
+#all_graphs = map(aggregate_demand_labels, all_graphs)
 
 nnodes = sum(all_graphs[1].g.ndata.mask)
 println("nnodes : ", nnodes)
@@ -135,16 +139,45 @@ val_loader = DataLoader(val_graphs,
                batchsize=bs, shuffle=false, collate=true)
 println("done")
 
+function solve_dataset(graphs, output_filename, solve_f)
+    df = DataFrame(instance=[], val=[], graph_reduction=[], solve_time=[], pricing_solve_time=[], master_solve_time=[], termination_status=[])
+    bar = ProgressBar(graphs)
+    set_description(bar, "Solving validation set: ")
+    for (i,g) in enumerate(bar)
+        _,ss = solve_f(g)
+        row = DataFrame(instance=i,
+                        val=ss["objective_value"],
+                        solve_time=ss["solve_time"],
+                        pricing_solve_time=ss["pricing_solve_time"],
+                        master_solve_time=ss["master_solve_time"],
+                        graph_reduction=ss["graph_reduction"],
+                        termination_status=ss["termination_status"]
+                       )
+        append!(df, row)
+    end
+    CSV.write(output_filename, df)
+end
+
 # model
 model = M8ClassifierModel(nhidden, 3, nlayers, nnodes) |> device
 
 # optimizer
 opt = Flux.Optimise.Optimiser(ClipNorm(1.0), Adam(bs* lr))
 
+# run once for compilation
+pb = get_instance(val_graphs[1])
+solve_column_generation(pb)
+solve_column_generation(pb, pricing_filter=ones(Bool, ne(pb), nk(pb)))
+sprs = M8MLSparsifier(device(model))
+solve_column_generation(pb, pricing_filter=sparsify(pb, sprs))
+
+# solve the instances in the validation set
+solve_dataset(val_graphs, joinpath(test_solve_output_dir, "default.csv"), 
+              g->solve_column_generation(get_instance(g))
+             )
+
 # debug
 function loss(pred::AbstractVector, labs::AbstractVector)
-    #pred = sigmoid(vec(model(g)))
-    #labels = vec(g.targets[g.target_mask])
     return Flux.Losses.tversky_loss(pred, labs; beta=tversky_beta)
 end
 
@@ -191,22 +224,16 @@ end
 
 # use model to solve test instances
 function solve_test_dataset(epoch, history)
-    if epoch % 10 == 0 || epoch==1
-        println("Testing the trained model on $(test_dataset_path)")
+    if epoch % solve_interval == 0 || epoch==1
+        println("Testing solving validation set")
         # create a directory for this epochs test solve outputs for K=0
-        output_dir_K0 = joinpath(test_solve_output_dir, "K0",string(epoch))
-        mkpath(output_dir_K0)
-        output_dir_K1 = joinpath(test_solve_output_dir, "K1",string(epoch))
-        mkpath(output_dir_K1)
-        for inst_dir in readdir(test_dataset_path, join=true)
-            if is_instance_dir(inst_dir)
-                # TODO : testing model, need MLSparsifier implementation
-                local inst = scale(MultiFlows.load(inst_dir, edge_dir=:double))
-             	checkpoint_path = joinpath(save_path, "checkpoint_e$epoch.bson")
-                #try s0,ss0 = solveUMF(inst,"CG","cplex",joinpath(output_dir_K0, basename(inst_dir))*".json", "", "clssp $checkpoint_path 0") catch e end
-                #s1,ss1 = solveUMF(inst,"CG","cplex",joinpath(output_dir_K1, basename(inst_dir))*".json", "", "clssp $checkpoint_path 1")
-            end
-        end
+     	checkpoint_path = joinpath(save_path, "checkpoint_e$epoch.jld2")
+        sparsifier = M8MLSparsifier(checkpoint_path)
+        solve_dataset(val_graphs, joinpath(test_solve_output_dir, "e$epoch.csv"),
+                      g->solve_column_generation(get_instance(g),
+                                                      pricing_filter=sparsify(get_instance(g),
+                                                                              sparsifier)
+                                                     ))
     end
 end
 
@@ -221,6 +248,6 @@ train_model(model,opt,loss,train_loader,val_loader,
                       callbacks=[TBCallback, save_model_checkpoint, solve_test_dataset],
                       early_stopping=es,
                       epochs=epochs,
-                      steps_per_epoch=30,
+                      #steps_per_epoch=30,
                      )
 

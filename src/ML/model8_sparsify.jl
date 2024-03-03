@@ -22,6 +22,9 @@ function M8MLSparsifier(model_path::String)
     model = M8ClassifierModel(nhidden, edge_feature_dim, nlayers, nnodes)
     # TODO : watch the _device parameter
     Flux.loadmodel!(model, model_state)
+    if CUDA.functional()
+        return M8MLSparsifier(Flux.gpu(model))
+    end
     return M8MLSparsifier(model)
 end
 
@@ -104,7 +107,11 @@ function m8_post_processing(scores::AbstractVector, demand::Demand, arc_matrix::
                 if !has_vertex(g, v)
                     add_vertices!(g, v-nv(g))
                 end
-                add_edge!(g, v, u, s) 
+                if s==0.0
+                    add_edge!(g, v, u, 1e-8)
+                else
+                    add_edge!(g, v, u, s) 
+                end
                 if !(v in r)
                     push!(q, v)
                 end
@@ -119,7 +126,11 @@ function m8_post_processing(scores::AbstractVector, demand::Demand, arc_matrix::
                 if !has_vertex(g, v)
                     add_vertices!(g, v-nv(g))
                 end
-                add_edge!(g, u, v, s) 
+                if s==0.0
+                    add_edge!(g, u, v, 1e-8)
+                else
+                    add_edge!(g, u, v, s) 
+                end
 
                 if !(v in r)
                     push!(q, v)
@@ -134,9 +145,9 @@ function m8_post_processing(scores::AbstractVector, demand::Demand, arc_matrix::
         end
         return idx
     else
-        return edge_indices(shortest_paths(fg, demand.src, demand.dst), fg)
+        idx[edge_indices(shortest_paths(fg, demand.src, demand.dst), fg)] .= 1
+        return idx
     end
-    
 end
 
 
@@ -147,7 +158,7 @@ Sparsify the problem with prediction from a [`M8ClassifierModel`](@ref).
 """
 function MultiFlows.sparsify(pb::MCF, sprs::M8MLSparsifier)
     # get GNNGraph representation of the instance
-    g = to_gnngraph(pb)
+    #g = to_gnngraph(pb)
     # predict
     scores = sprs.model(pb)
     # TODO: post processing step

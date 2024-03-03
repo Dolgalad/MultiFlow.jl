@@ -123,6 +123,62 @@ function get_instance(ag::AugmentedGraph)
     return MCF(SimpleDiGraph(edge_list), costs, capacities, demands)
 end
 
+function get_instance(g::GNNGraph)
+    s,t = edge_index(g)
+    nK = sum(.!g.ndata.mask)
+    demandsrc = t[ne(g)-2*nK+1:ne(g)-nK]
+    demanddst = s[ne(g)-nK+1:end]
+    demandamounts = Float64.(demand_amounts(g))
+    demands = [Demand(ss,tt,a) for (ss,tt,a) in zip(demandsrc,demanddst,demandamounts)]
+
+    edge_list = Edge.([(s,t) for (s,t) in zip(s[g.edata.mask],t[g.edata.mask])])
+    csts = Float64.(g.e[1,g.edata.mask])
+    caps = Float64.(g.e[2,g.edata.mask])
+    return MCF(SimpleDiGraph(edge_list), csts, caps, demands)
+
+end
+
+"""
+    add_stacked_index(g::GNNGraph)
+"""
+function add_stacked_index(g::GNNGraph)
+    # create the demand and edge stacking indexes
+    egind = graph_indicator(g, edges=true)
+    regind = egind[g.edata.mask]
+    niedges = sum(g.edata.mask[egind .== 1]) # same number of edges in each graph
+    ngind = graph_indicator(g)
+    dgind = ngind[.!g.ndata.mask]
+    dind = 1:size(dgind,1)
+    reind = 1:size(regind,1)
+    demand_stacked_idx = reduce(vcat,[repeat(dind[dgind .== i], inner=niedges) for i=1:g.num_graphs])
+    edge_stacked_idx = reduce(vcat, [repeat(reind[regind .== i], g.K[i]) for i=1:g.num_graphs])
+    nstack = size(demand_stacked_idx,1)
+    if nstack % g.num_graphs == 0
+        _demand_stacked_idx = zeros(Int64, Int64(nstack / g.num_graphs), g.num_graphs)
+        _demand_stacked_idx[:] .= demand_stacked_idx
+        _edge_stacked_idx = zeros(Int64, Int64(nstack / g.num_graphs), g.num_graphs)
+        _edge_stacked_idx[:] .= edge_stacked_idx
+    else
+        _demand_stacked_idx = zeros(Int64, 1 + trunc(Int64, nstack / g.num_graphs), g.num_graphs)
+        _demand_stacked_idx[1:nstack] .= demand_stacked_idx
+        _edge_stacked_idx = zeros(Int64, 1 + trunc(Int64, nstack / g.num_graphs), g.num_graphs)
+        _edge_stacked_idx[1:nstack] .= edge_stacked_idx
+    end
+
+    GNNGraph(g, 
+                 ndata=g.ndata, 
+                 edata=g.edata, 
+                 gdata=(;
+                        g.gdata..., 
+                        demand_stacked_idx=_demand_stacked_idx,
+                        edge_stacked_idx=_edge_stacked_idx
+                       )
+                )
+end
+
+
+
+
 """
     to_gnngraph(pb::MCF; feature_type::DataType=eltype(costs(pb)))
 
@@ -168,7 +224,7 @@ function to_gnngraph(pb::MCF; feature_type::DataType=eltype(costs(pb)))
     demand_to_source_mask[nE+1:nE+nK] .= 1
     target_to_demand_mask[nE+nK+1:end] .= 1
 
-    return GNNGraph(ag.edge_src, ag.edge_dst,
+    g = GNNGraph(ag.edge_src, ag.edge_dst,
                ndata=(;mask=ag.node_mask),
                edata=(;e=feature_type.(ag.edge_features), 
 		       mask=ag.edge_mask,
@@ -180,6 +236,7 @@ function to_gnngraph(pb::MCF; feature_type::DataType=eltype(costs(pb)))
                        E=nE,
 		      )
            )
+    return add_stacked_index(g)
 end
 
 
@@ -218,6 +275,7 @@ GNNGraph:
 function to_gnngraph(pb::MCF, y::AbstractMatrix{Bool}; feature_type::DataType=eltype(costs(pb)))
     # create GNNGraph without labels
     gnn = to_gnngraph(pb, feature_type=feature_type)
+    gnn = add_stacked_index(gnn)
     return GNNGraph(gnn, 
                     ndata=gnn.ndata, 
                     edata=gnn.edata, 
@@ -369,4 +427,7 @@ function aggregate_demand_labels(ag::AugmentedGNNGraph)
     return AugmentedGNNGraph(aggregate_demand_labels(ag.g))
 end
 
+function get_instance(ag::AugmentedGNNGraph)
+    return get_instance(ag.g)
+end
 
