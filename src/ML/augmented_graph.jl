@@ -203,9 +203,10 @@ GNNGraph:
 	demand_to_source_mask = 26-element Vector{Bool}
 	target_to_demand_mask = 26-element Vector{Bool}
   gdata:
+	edge_stacked_idx = 24×1 Matrix{Int64}
 	K = 1
+	demand_stacked_idx = 24×1 Matrix{Int64}
 	E = 24
-
 
 ```
 """
@@ -264,8 +265,10 @@ GNNGraph:
 	demand_to_source_mask = 26-element Vector{Bool}
 	target_to_demand_mask = 26-element Vector{Bool}
   gdata:
+	edge_stacked_idx = 24×1 Matrix{Int64}
 	targets = 24×1 Matrix{Bool}
 	K = 1
+	demand_stacked_idx = 24×1 Matrix{Int64}
 	E = 24
 
 
