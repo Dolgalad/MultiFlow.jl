@@ -77,7 +77,7 @@ if !isdir(dataset_path)
 end
 
 # model name and save path
-model_name = "model8_l"*string(nlayers)*"_lr"*string(lr)*"_h"*string(nhidden)*"_bs"*string(bs)*"_e"*string(epochs)*"_tversky"*string(tversky_beta)*" "*string(_reverse ? "rev" : "norev")
+model_name = "model8_l"*string(nlayers)*"_lr"*string(lr)*"_h"*string(nhidden)*"_bs"*string(bs)*"_e"*string(epochs)*"_tversky"*string(tversky_beta)*"_"*string(_reverse ? "rev" : "norev")
 save_path = joinpath(workdir, "models", dataset_name, model_name)
 if isdir(save_path)
     rm(save_path, force=true, recursive=true)
