@@ -155,6 +155,25 @@ end
     MultiFlows.sparsify(pb::MCF, sprs::M8MLSparsifier)
 
 Sparsify the problem with prediction from a [`M8ClassifierModel`](@ref).
+
+# Example
+```jldoctest; setup = :(using Graphs, Random; Random.seed!(123))
+julia> pb = MCF(grid((2,2)), rand(4), rand(4), [Demand(1,4,1.), Demand(1,4,1.), Demand(3,2,1.)]);
+
+julia> model = M8ClassifierModel(64, 3, 4, nv(pb));
+
+julia> sprs = sparsify(pb, M8MLSparsifier(model))
+8×3 Matrix{Bool}:
+ 0  0  1
+ 1  1  1
+ 1  1  1
+ 1  1  1
+ 0  0  1
+ 1  1  1
+ 1  1  0
+ 0  0  1
+
+```
 """
 function MultiFlows.sparsify(pb::MCF, sprs::M8MLSparsifier)
     # get GNNGraph representation of the instance
