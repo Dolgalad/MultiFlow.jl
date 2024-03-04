@@ -57,6 +57,7 @@ nlayers = 4
 tversky_beta = 0.1
 es_patience = 1000
 solve_interval = 10
+_reverse = true
 
 #if length(ARGS)>=1
 #    dataset_path = joinpath(ARGS[1], "train")
@@ -76,7 +77,7 @@ if !isdir(dataset_path)
 end
 
 # model name and save path
-model_name = "model8_l"*string(nlayers)*"_lr"*string(lr)*"_h"*string(nhidden)*"_bs"*string(bs)*"_e"*string(epochs)*"_tversky"*string(tversky_beta)
+model_name = "model8_l"*string(nlayers)*"_lr"*string(lr)*"_h"*string(nhidden)*"_bs"*string(bs)*"_e"*string(epochs)*"_tversky"*string(tversky_beta)*" "*string(_reverse ? "rev" : "norev")
 save_path = joinpath(workdir, "models", dataset_name, model_name)
 if isdir(save_path)
     rm(save_path, force=true, recursive=true)
@@ -159,7 +160,7 @@ function solve_dataset(graphs, output_filename, solve_f)
 end
 
 # model
-model = M8ClassifierModel(nhidden, 3, nlayers, nnodes) |> device
+model = M8ClassifierModel(nhidden, 3, nlayers, nnodes, reverse=_reverse) |> device
 
 # optimizer
 opt = Flux.Optimise.Optimiser(ClipNorm(1.0), Adam(bs* lr))
