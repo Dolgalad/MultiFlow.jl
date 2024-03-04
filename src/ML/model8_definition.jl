@@ -14,7 +14,7 @@ struct M8MPLayer
     drop_e::Dropout
     bn_n::BatchNorm
     bn_e::BatchNorm
-    rev::M3EdgeReverseLayer
+    rev::Union{Function,M3EdgeReverseLayer}
     backward_conv::MEGNetConv
     _n::Int64
 end
