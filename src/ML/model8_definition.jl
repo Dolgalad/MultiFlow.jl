@@ -32,14 +32,14 @@ julia> m = M8MPLayer(2)
 M8MPLayer(GraphNeuralNetworks.MEGNetConv{Flux.Chain{Vector{Any}}, Flux.Chain{Vector{Any}}, typeof(Statistics.mean)}(Chain([Dense(6 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 2)]), Chain([Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 2)]), Statistics.mean), Dropout(0.1), Dropout(0.1), BatchNorm(2), BatchNorm(2), M3EdgeReverseLayer(), GraphNeuralNetworks.MEGNetConv{Flux.Chain{Vector{Any}}, Flux.Chain{Vector{Any}}, typeof(Statistics.mean)}(Chain([Dense(6 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 2)]), Chain([Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 2)]), Statistics.mean), 2)
 ```
 """
-function M8MPLayer(n::Int64; drop_p::Float64=.1)
+function M8MPLayer(n::Int64; drop_p::Float64=.1, reverse::Bool=true)
     return M8MPLayer(
                      MyMEGNetConv3(n), 
 		     Flux.Dropout(drop_p), 
 		     Flux.Dropout(drop_p),
 		     Flux.BatchNorm(n), 
 		     Flux.BatchNorm(n), 
-		     M3EdgeReverseLayer(), 
+		     reverse ? M3EdgeReverseLayer() : identity, 
 		     MyMEGNetConv3(n),
                      n
                     )
@@ -125,11 +125,12 @@ function M8ClassifierModel(node_feature_dim::Int64,
 			   nnodes::Int64; 
                            drop_p::Float64=0.1,
 			   device::Function=CUDA.functional() ? Flux.gpu : Flux.cpu,
+                           reverse::Bool=true
 			   )
     node_embeddings = Flux.Embedding(nnodes, node_feature_dim)
     edge_encoder = MLP(edge_feature_dim, node_feature_dim, node_feature_dim, drop_p=drop_p)
     demand_encoder = MLP(2*node_feature_dim+1, node_feature_dim, node_feature_dim, drop_p=drop_p)
-    graph_conv      = [M8MPLayer(node_feature_dim, drop_p=drop_p) for _ in 1:n_layers]
+    graph_conv      = [M8MPLayer(node_feature_dim, drop_p=drop_p, reverse=reverse) for _ in 1:n_layers]
 
     demand_mlp = MLP(3*((n_layers+1)*node_feature_dim), node_feature_dim, node_feature_dim, drop_p=drop_p)
     edge_mlp = MLP(2*((n_layers+1)*node_feature_dim), node_feature_dim, node_feature_dim, drop_p=drop_p)

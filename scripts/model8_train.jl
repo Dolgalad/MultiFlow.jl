@@ -55,7 +55,7 @@ lr = 1.0e-6
 nhidden = 64
 nlayers = 4
 tversky_beta = 0.1
-es_patience = 100
+es_patience = 1000
 solve_interval = 10
 
 #if length(ARGS)>=1
