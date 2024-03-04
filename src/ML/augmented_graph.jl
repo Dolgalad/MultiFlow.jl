@@ -123,7 +123,44 @@ function get_instance(ag::AugmentedGraph)
     return MCF(SimpleDiGraph(edge_list), costs, capacities, demands)
 end
 
+
+"""
+    get_instance(g::GNNGraph)
+
+Transforms a `GNNGraph` to a [`MCF`](@ref) instance. Works with batched `GNNGraph` objects.
+
+# Example
+```jldoctest; setup = :(using Graphs)
+julia> pb = MCF(grid((3,3)), rand(12), rand(12), [Demand(1,9,1.)]);
+
+julia> g = to_gnngraph(pb);
+
+julia> pb1 = get_instance(g)
+MCF(nv = 9, ne = 24, nk = 1)
+	Demand{Int64, Float64}(1, 9, 1.0)
+
+julia> pb == pb1
+true
+```
+
+If `g` is composed of multiple graphs : 
+```jldoctest; setup = :(using Graphs, GraphNeuralNetworks; pb1 = MCF(grid((3,3)), rand(12), rand(12), [Demand(1,9,1.)]); pb2 = MCF(grid((3,3)), rand(12), rand(12), [Demand(6,9,2.)]); g = batch([to_gnngraph(pb1), to_gnngraph(pb2)]))
+julia> g.num_graphs
+2
+
+julia> get_instance(g)
+2-element Vector{MCF}:
+ MCF(nv = 9, ne = 24, nk = 1)
+	Demand{Int64, Float64}(1, 9, 1.0)
+
+ MCF(nv = 9, ne = 24, nk = 1)
+	Demand{Int64, Float64}(6, 9, 2.0)
+
+"""
 function get_instance(g::GNNGraph)
+    if g.num_graphs > 1
+        return MCF[get_instance(bg) for bg in unbatch(g)]
+    end
     s,t = edge_index(g)
     nK = sum(.!g.ndata.mask)
     demandsrc = t[ne(g)-2*nK+1:ne(g)-nK]
@@ -140,6 +177,72 @@ end
 
 """
     add_stacked_index(g::GNNGraph)
+
+Utility function that adds the `demand_stacked_idx, edge_stacked_idx` index vectors to the `GNNGraph`. Given an instance with demands ``K`` and edges ``A`` the classifier computes the scores ``s_a^k`` for each pair ``(a,k)``. Initial implementations of the model stacked the edge and demand vectors at each forward call of the model leading to CPU operations and slowing down computation at train time. This was especially true when batching multiple instances since we want to avoid computing scores for pairs ``(a_i, k_j)`` where ``i, j`` denote the indexes of two different instances in the batch. 
+
+# Example
+```jldoctest; setup = :(using Graphs, Random; Random.seed!(123); pb1 = MCF(grid((3,3)), rand(12), rand(12), [Demand(1,9,1.)]); g = to_gnngraph(pb); g = GNNGraph(g, gdata=(;K=g.K, E=g.E))
+julia> g
+GNNGraph:
+  num_nodes: 10
+  num_edges: 26
+  ndata:
+	mask = 10-element Vector{Bool}
+  edata:
+	e = 3×26 Matrix{Float64}
+	demand_amounts_mask = 26-element BitVector
+	mask = 26-element Vector{Bool}
+	demand_to_source_mask = 26-element Vector{Bool}
+	target_to_demand_mask = 26-element Vector{Bool}
+  gdata:
+	K = 1
+	E = 24
+
+julia> g = add_stacked_index(g)
+GNNGraph:
+  num_nodes: 10
+  num_edges: 26
+  ndata:
+	mask = 10-element Vector{Bool}
+  edata:
+	e = 3×26 Matrix{Float64}
+	demand_amounts_mask = 26-element BitVector
+	mask = 26-element Vector{Bool}
+	demand_to_source_mask = 26-element Vector{Bool}
+	target_to_demand_mask = 26-element Vector{Bool}
+  gdata:
+	edge_stacked_idx = 24×1 Matrix{Int64}
+	K = 1
+	demand_stacked_idx = 24×1 Matrix{Int64}
+	E = 24
+
+julia> hcat(g.edge_stacked_idx, g.demand_stacked_idx)
+24×2 Matrix{Int64}:
+  1  1
+  2  1
+  3  1
+  4  1
+  5  1
+  6  1
+  7  1
+  8  1
+  9  1
+ 10  1
+ 11  1
+ 12  1
+ 13  1
+ 14  1
+ 15  1
+ 16  1
+ 17  1
+ 18  1
+ 19  1
+ 20  1
+ 21  1
+ 22  1
+ 23  1
+ 24  1
+
 """
 function add_stacked_index(g::GNNGraph)
     # create the demand and edge stacking indexes
@@ -321,21 +424,6 @@ function MultiFlows.demand_endpoints(g::GNNGraph)
     return ds_t,dt_t
 end
 
-# TODO: remove this
-"""
-    ones_and_zeros(k::Int64, 
-                   dev::Function=CUDA.functional() ? Flux.gpu : Flux.cpu
-    )
-
-Utility function that concatenated a vector of `k` ones with `k` zeros and sends the result to the GPU if available.
-"""
-function ones_and_zeros(k::Int64, 
-                        dev::Function=CUDA.functional() ? Flux.gpu : Flux.cpu
-    )
-    #dev = CUDA.functional() ? Flux.gpu : Flux.cpu
-    return vcat(ones(Bool, k), zeros(Bool, k)) |> dev
-end
-
 """
     MultiFlows.demand_amounts(g::GNNGraph)
 
@@ -357,7 +445,6 @@ function MultiFlows.demand_amounts(g::GNNGraph)
 end
 
 
-# combine labels for demands sharing the same origin and destination vertices
 """
     aggregate_demand_labels(g::GNNGraph)
 
@@ -424,12 +511,57 @@ end
 """
     aggregate_demand_labels(ag::AugmentedGNNGraph)
 
-Aggregate demand labels.
+Specialization of the [`aggregate_demand_labels`](@ref) function for `AugmentedGNNGraph` objects.
+
+# Example
+```jldoctest; setup = :(using Random,Graphs,MultiFlows.ML; Random.seed!(123))
+julia> pb = MCF(grid((2,2)), rand(4), rand(4), [Demand(1,4,1.), Demand(1,4,1.), Demand(3,2,1.)]);
+
+julia> y = rand(Bool, ne(pb), nk(pb));
+
+julia> gnn = aggregate_demand_labels(AugmentedGNNGraph(to_gnngraph(pb, y)));
+
+julia> gnn.g.targets
+8×3×1 Array{Bool, 3}:
+[:, :, 1] =
+ 1  1  0
+ 1  1  1
+ 1  1  0
+ 0  0  1
+ 1  1  1
+ 0  0  1
+ 1  1  1
+ 0  0  1
+
+```
+
 """
 function aggregate_demand_labels(ag::AugmentedGNNGraph)
     return AugmentedGNNGraph(aggregate_demand_labels(ag.g))
 end
 
+"""
+    get_instance(ag::AugmentedGNNGraph)
+
+Specialization of the [`get_instance`](@ref) function for `AugmentedGNNGraph` objects.
+
+# Example
+```jldoctest; setup = :(using Random, Graphs; Random.seed!(123))
+julia> pb = MCF(grid((3,3)), rand(12), rand(12), [Demand(1,9,1.)])
+MCF(nv = 9, ne = 24, nk = 1)
+	Demand{Int64, Float64}(1, 9, 1.0)
+
+julia> g = AugmentedGNNGraph(to_gnngraph(pb));
+
+julia> pb1 = get_instance(g)
+MCF(nv = 9, ne = 24, nk = 1)
+	Demand{Int64, Float64}(1, 9, 1.0)
+
+julia> pb1 == pb
+true
+```
+
+"""
 function get_instance(ag::AugmentedGNNGraph)
     return get_instance(ag.g)
 end
