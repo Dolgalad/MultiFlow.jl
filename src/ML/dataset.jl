@@ -114,18 +114,11 @@ function make_batchable(gl::Vector{GNNGraph})
         new_targets[1:nedges, 1:size(g.targets, 2)] .= g.targets
         target_mask = zeros(Bool, (max_ne, max_k))
         target_mask[1:nedges, 1:size(g.targets, 2)] .= 1
-        ## stacked indexes
-        #new_demand_stacked_idx = zeros(Int64, max_stacked)
-        #new_demand_stacked_idx[1:size(g.demand_stacked_idx,1)] .= g.demand_stacked_idx
-        #new_edge_stacked_idx = zeros(Int64, max_stacked)
-        #new_edge_stacked_idx[1:size(g.demand_stacked_idx,1)] .= g.edge_stacked_idx
         ng = GNNGraph(g, gdata=(;
                                    K=g.K, 
                                    E=g.E, 
                                    targets=new_targets, 
                                    target_mask=target_mask,
-                                   #demand_stacked_idx=new_demand_stacked_idx,
-                                   #edge_stacked_idx=new_edge_stacked_idx
                                   )
                      )
         push!(new_graphs, ng)
@@ -133,6 +126,46 @@ function make_batchable(gl::Vector{GNNGraph})
     return new_graphs
 end
 
+
+"""
+    make_batchable(gl::Vector{AugmentedGNNGraph})
+
+Specialization of the [`make_batchable`](@ref) for [`AugmentedGNNGraph`](@ref) objects. Ensures that all the items in the batch have compatible feature dimensions.
+
+# Example
+```jldoctest makebatch; setup = :(using GraphNeuralNetworks, JuMP, Graphs)
+julia> pb1 = MCF(grid((2,2)), rand(4), rand(4), [Demand(1,4,1.), Demand(1,4,1.), Demand(3,2,1.)]);
+
+julia> _,(mod1,_) = solve_compact(pb1, max_acceptance=true, return_model=true);
+
+julia> y1 = value.(mod1[:x]) .> 0 ;
+
+julia> gnn1 = AugmentedGNNGraph(to_gnngraph(pb1, y1));
+
+julia> pb2 = MCF(grid((2,3)), rand(7), rand(7), [Demand(1,4,1.), Demand(1,4,1.), Demand(3,2,1.)]);
+
+julia> _,(mod2,_) = solve_compact(pb2, max_acceptance=true, return_model=true);
+
+julia> y2 = value.(mod2[:x]) .> 0 ;
+
+julia> gnn2 = AugmentedGNNGraph(to_gnngraph(pb2, y2));
+
+julia> bg = make_batchable([gnn1, gnn2])
+2-element Vector{AugmentedGNNGraph}:
+ AugmentedGNNGraph(GNNGraph(7, 14) with mask: 7-element, (e: 3×14, demand_amounts_mask: 14-element, mask: 14-element, demand_to_source_mask: 14-element, target_to_demand_mask: 14-element), (edge_stacked_idx: 42×1, targets: 14×3×1, K: 0-dimensional, demand_stacked_idx: 42×1, target_mask: 14×3×1, E: 0-dimensional) data)
+ AugmentedGNNGraph(GNNGraph(9, 20) with mask: 9-element, (e: 3×20, demand_amounts_mask: 20-element, mask: 20-element, demand_to_source_mask: 20-element, target_to_demand_mask: 20-element), (edge_stacked_idx: 42×1, targets: 14×3×1, K: 0-dimensional, demand_stacked_idx: 42×1, target_mask: 14×3×1, E: 0-dimensional) data)
+```
+
+Notice that the values of the `edge_stacked_idx, demand_stacked_idx` have been changed. The vectors have been padded with zero values so that their dimensions match.
+```jldoctest makebatch
+julia> size(gnn1.g.edge_stacked_idx), size(gnn1.g.demand_stacked_idx)
+((24, 1), (24, 1))
+
+julia> size(bg[1].g.edge_stacked_idx), size(bg[1].g.demand_stacked_idx)
+((42, 1), (42, 1))
+
+```
+"""
 function make_batchable(gl::Vector{AugmentedGNNGraph})
     max_k = maximum(ag.g.K for ag in gl)
     max_ne = maximum(size(ag.g.targets,1) for ag in gl)
@@ -278,7 +311,14 @@ end
 """
     load_instance(path::String; scale::Bool=true, feature_type::DataType=Float32)
 
-Load single instance and return a GNNGraph.
+Load single instance and return an [`AugmentedGNNGraph`](@ref) object.
+
+# Example
+```jldoctest; setup = :(using Graphs, Random; Random.seed!(123); pb = MCF(grid((2,2)), rand(4), rand(4), [Demand(1,4,1.), Demand(1,4,1.), Demand(3,2,1.)]); MultiFlows.save(pb, "test_instance"))
+julia> g = load_instance("test_instance")
+AugmentedGNNGraph(GNNGraph(7, 14) with mask: 7-element, (e: 3×14, demand_amounts_mask: 14-element, mask: 14-element, demand_to_source_mask: 14-element, target_to_demand_mask: 14-element), (edge_stacked_idx: 24×1, K: 0-dimensional, demand_stacked_idx: 24×1, E: 0-dimensional) data)
+
+```
 """
 function load_instance(path::String; scale::Bool=true, feature_type::DataType=Float32)
     inst = MultiFlows.load(path)
@@ -303,7 +343,48 @@ end
 """
     Flux.batch(gs::AbstractVector{AugmentedGNNGraph}
 
-Batch a list of `AugmentedGNNGraph` objects.
+Specialization of the `batch` function for [`AugmentedGNNGraph`](@ref) objects. Items in `gs` should have been made batchable by calling the [`make_batchable`](@ref) function beforehand. After concatenating the features of each graph the `edge_stacked_idx, demand_stacked_idx` values are increased by `cumsum(g.K)[i-1], cumsum(g.E)[i-1]` respectively. This ensures that each pair `ei,di` in `zip(edge_stacked_idx, demand_stacked_idx)` correspond to a edge-demand pair ``(a,k)`` where ``a`` and ``k`` belong to the same instance. 
+
+# Example
+```jldoctest; setup = :(using Graphs, JuMP, GraphNeuralNetworks; pb1 = MCF(grid((2,2)), rand(4), rand(4), [Demand(1,4,1.), Demand(1,4,1.), Demand(3,2,1.)]); (_,(mod1,_)) = solve_compact(pb1, max_acceptance=true, return_model=true);y1 = value.(mod1[:x]) .> 0 ; gnn1 = AugmentedGNNGraph(to_gnngraph(pb1, y1)); pb2 = MCF(grid((2,3)), rand(7), rand(7), [Demand(1,4,1.), Demand(1,4,1.), Demand(3,2,1.)]); (_,(mod2,_)) = solve_compact(pb2, max_acceptance=true, return_model=true); y2 = value.(mod2[:x]) .> 0 ; gnn2 = AugmentedGNNGraph(to_gnngraph(pb2, y2)))
+julia> gl = make_batchable([gnn1, gnn2]);
+
+julia> g = batch(gl)
+GNNGraph:
+  num_nodes: 16
+  num_edges: 34
+  num_graphs: 2
+  ndata:
+	mask = 16-element Vector{Bool}
+  edata:
+	e = 3×34 Matrix{Float64}
+	demand_amounts_mask = 34-element BitVector
+	mask = 34-element Vector{Bool}
+	demand_to_source_mask = 34-element Vector{Bool}
+	target_to_demand_mask = 34-element Vector{Bool}
+  gdata:
+	edge_stacked_idx = 42×2 Matrix{Int64}
+	targets = 14×3×2 Array{Bool, 3}
+	K = 2-element Vector{Int64}
+	demand_stacked_idx = 42×2 Matrix{Int64}
+	target_mask = 14×3×2 Array{Bool, 3}
+	E = 2-element Vector{Int64}
+
+julia> g.E, g.K
+([8, 14], [3, 3])
+
+julia> minimum(g.edge_stacked_idx[:,1]), maximum(g.edge_stacked_idx[:,1])
+(0, 8)
+
+julia> minimum(g.demand_stacked_idx[:,1]), maximum(g.demand_stacked_idx[:,1])
+(0, 3)
+
+julia> minimum(g.edge_stacked_idx[:,2]), maximum(g.edge_stacked_idx[:,2])
+(9, 22)
+
+julia> minimum(g.demand_stacked_idx[:,2]), maximum(g.demand_stacked_idx[:,2])
+(4, 6)
+```
 """
 function Flux.batch(gs::AbstractVector{AugmentedGNNGraph})
     v_num_nodes = [ag.g.num_nodes for ag in gs]
