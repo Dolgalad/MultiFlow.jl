@@ -10,7 +10,19 @@ end
 """
     M8MLSparsifier
 
-`M8MLSparsifier constructor from model state defined in file `model_path`. 
+`M8MLSparsifier constructor from model state defined in file `model_path`. `model_path` file should be a JLD2 file containing the `model_state` field.
+
+# Example
+```jldoctest; setup = :(using JLD2, Flux)
+julia> model = M8ClassifierModel(2, 2, 2, 2);
+
+julia> model_state = Flux.state(model);
+
+julia> jldsave("checkpoint.jld2"; model_state);
+
+julia> M8MLSparsifier("checkpoint.jld2")
+M8MLSparsifier(M8ClassifierModel(Embedding(2 => 2), Chain([Dense(2 => 2, relu), Dropout(0.1), Dense(2 => 2, relu), Dropout(0.1), Dense(2 => 2), Dropout(0.1)]), Chain([Dense(5 => 2, relu), Dropout(0.1), Dense(2 => 2, relu), Dropout(0.1), Dense(2 => 2), Dropout(0.1)]), MultiFlows.ML.M8MPLayer[M8MPLayer(GraphNeuralNetworks.MEGNetConv{Chain{Vector{Any}}, Chain{Vector{Any}}, typeof(Statistics.mean)}(Chain([Dense(6 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 2)]), Chain([Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 2)]), Statistics.mean), Dropout(0.1), Dropout(0.1), BatchNorm(2), BatchNorm(2), M3EdgeReverseLayer(), GraphNeuralNetworks.MEGNetConv{Chain{Vector{Any}}, Chain{Vector{Any}}, typeof(Statistics.mean)}(Chain([Dense(6 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 2)]), Chain([Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 2)]), Statistics.mean), 2), M8MPLayer(GraphNeuralNetworks.MEGNetConv{Chain{Vector{Any}}, Chain{Vector{Any}}, typeof(Statistics.mean)}(Chain([Dense(6 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 2)]), Chain([Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 2)]), Statistics.mean), Dropout(0.1), Dropout(0.1), BatchNorm(2), BatchNorm(2), M3EdgeReverseLayer(), GraphNeuralNetworks.MEGNetConv{Chain{Vector{Any}}, Chain{Vector{Any}}, typeof(Statistics.mean)}(Chain([Dense(6 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 2)]), Chain([Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 4, relu), Dropout(0.1), BatchNorm(4), Dense(4 => 2)]), Statistics.mean), 2)], Chain([Dense(18 => 2, relu), Dropout(0.1), Dense(2 => 2, relu), Dropout(0.1), Dense(2 => 2), Dropout(0.1)]), Chain([Dense(12 => 2, relu), Dropout(0.1), Dense(2 => 2, relu), Dropout(0.1), Dense(2 => 2), Dropout(0.1)]), Bilinear(2 => 1), Flux.cpu))
+```
 """
 function M8MLSparsifier(model_path::String)
     # create the model

@@ -123,4 +123,10 @@ include("sparsify.jl")
 include("ML/ML.jl")
 using .ML
 
+# TikZ figures
+include("TikZ.jl")
+
+export TikZEnvironment,
+       tikz_graph
+
 end # module MultiFlows

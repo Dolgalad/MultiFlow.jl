@@ -46,6 +46,9 @@ pages_files = [
         "sparsify.md",
         "ml_sparsify.md",
     ],
+    "Utilities" => [
+        "tikz_figures.md"
+    ],
     "Installation and development" => [
         "development.md"
     ]
