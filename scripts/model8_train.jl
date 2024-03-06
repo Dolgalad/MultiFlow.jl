@@ -57,7 +57,7 @@ es_patience = 1000
 solve_interval = 10
 _reverse = false
 
-model_name_prefix = "temp_model8"
+model_name_prefix = "model8"
 
 #if length(ARGS)>=1
 #    dataset_path = joinpath(ARGS[1], "train")
@@ -113,17 +113,6 @@ println("\tTensorBoard directory       = ", tb_log_dir)
 println("\ttest solve output directory = ", test_solve_output_dir)
 
 
-# run once for compilation
-
-##solveUMF(inst,"CG","highs","./output.txt")
-##solveUMF(inst,"CG","highs","./output.txt","","clssp model5_test_checkpoint.bson 1")
-#for inst_dir in readdir(test_dataset_path, join=true)
-#    if UMFSolver.is_instance_path(inst_dir)
-#        local inst = UMFSolver.scale(UMFData(inst_dir))
-#        s1,ss1 = solveUMF(inst,"CG","cplex",joinpath(output_dir_default, basename(inst_dir))*".json")
-#    end
-#end
-
 print("Loading dataset...")
 # TODO: not enough memory on my machine for whole dataset
 all_graphs = load_dataset(dataset_path, transform_f=aggregate_demand_labels, show_progress=true, max_n=1000)
@@ -147,7 +136,7 @@ function solve_dataset(graphs, solve_f)
     for (i,g) in enumerate(bar)
         _,ss = solve_f(g)
         push!(objective_values, ss["objective_value"])
-        push!(solve_times, ss["solve_time"])
+        push!(solve_times, ss["solve_time"]
     end
     return objective_values, solve_times
 end
@@ -222,15 +211,15 @@ function solve_test_dataset(epoch, history)
         # create a directory for this epochs test solve outputs for K=0
      	checkpoint_path = joinpath(save_path, "checkpoint_e$epoch.jld2")
         sparsifier = M8MLSparsifier(checkpoint_path)
-        solve_vals, solve_times = solve_dataset(val_graphs,
+        solve_vals, solve_times = solve_dataset(val_graphs, joinpath(test_solve_output_dir, "e$epoch.csv"),
                       g->solve_column_generation(get_instance(g),
                                                       pricing_filter=sparsify(get_instance(g),
                                                                               sparsifier)
                                                      ))
 	# update training history, add mean optimality criterion and speedup value
         update!(history, Dict(
-			      "opt"=>mean((solve_vals .- default_solve_vals) ./ default_solve_vals), 
-			      "spd"=>mean((solve_times .- default_solve_times) ./ default_solve_times)
+			      "opt"=>1mean((default_solve_vals .- solve_vals) ./ default_solve_vals), 
+			      "spd"=>mean(spd)
 			      ), 
 			 prefix="val")
     end
