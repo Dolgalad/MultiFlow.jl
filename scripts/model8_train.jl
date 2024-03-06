@@ -8,8 +8,6 @@ Arguments :
 #ENV["JULIA_CUDA_MEMORY_POOL"] = "none"
 ENV["GKSwstype"] = "nul"
 
-using Revise
-
 using MultiFlows, MultiFlows.ML
 using ProgressBars
 using Plots
@@ -57,7 +55,9 @@ nlayers = 4
 tversky_beta = 0.1
 es_patience = 1000
 solve_interval = 10
-_reverse = true
+_reverse = false
+
+model_name_prefix = "temp_model8"
 
 #if length(ARGS)>=1
 #    dataset_path = joinpath(ARGS[1], "train")
@@ -77,7 +77,7 @@ if !isdir(dataset_path)
 end
 
 # model name and save path
-model_name = "model8_l"*string(nlayers)*"_lr"*string(lr)*"_h"*string(nhidden)*"_bs"*string(bs)*"_e"*string(epochs)*"_tversky"*string(tversky_beta)*"_"*string(_reverse ? "rev" : "norev")
+model_name = model_name_prefix * "_l"*string(nlayers)*"_lr"*string(lr)*"_h"*string(nhidden)*"_bs"*string(bs)*"_e"*string(epochs)*"_tversky"*string(tversky_beta)*"_"*string(_reverse ? "rev" : "norev")
 save_path = joinpath(workdir, "models", dataset_name, model_name)
 if isdir(save_path)
     rm(save_path, force=true, recursive=true)
@@ -140,23 +140,16 @@ val_loader = DataLoader(val_graphs,
                batchsize=bs, shuffle=false, collate=true)
 println("done")
 
-function solve_dataset(graphs, output_filename, solve_f)
-    df = DataFrame(instance=[], val=[], graph_reduction=[], solve_time=[], pricing_solve_time=[], master_solve_time=[], termination_status=[])
+function solve_dataset(graphs, solve_f)
+    objective_values, solve_times = [], []
     bar = ProgressBar(graphs)
     set_description(bar, "Solving validation set: ")
     for (i,g) in enumerate(bar)
         _,ss = solve_f(g)
-        row = DataFrame(instance=i,
-                        val=ss["objective_value"],
-                        solve_time=ss["solve_time"],
-                        pricing_solve_time=ss["pricing_solve_time"],
-                        master_solve_time=ss["master_solve_time"],
-                        graph_reduction=ss["graph_reduction"],
-                        termination_status=ss["termination_status"]
-                       )
-        append!(df, row)
+        push!(objective_values, ss["objective_value"])
+        push!(solve_times, ss["solve_time"])
     end
-    CSV.write(output_filename, df)
+    return objective_values, solve_times
 end
 
 # model
@@ -173,7 +166,7 @@ sprs = M8MLSparsifier(device(model))
 solve_column_generation(pb, pricing_filter=sparsify(pb, sprs))
 
 # solve the instances in the validation set
-solve_dataset(val_graphs, joinpath(test_solve_output_dir, "default.csv"), 
+default_solve_vals, default_solve_times = solve_dataset(val_graphs, 
               g->solve_column_generation(get_instance(g))
              )
 
@@ -187,7 +180,6 @@ function get_labs(g)
     return vec(g.targets[g.target_mask])
 end
 function loss(loader, m)
-    #r = mean(loss(sigmoid(vec(model(g))), vec(g.targets[g.target_mask])) for g in loader)
     r = mean(loss(sigmoid(vec(model(ag |> device))), get_labs(ag)) for ag in loader)
     return r
 end
@@ -230,11 +222,17 @@ function solve_test_dataset(epoch, history)
         # create a directory for this epochs test solve outputs for K=0
      	checkpoint_path = joinpath(save_path, "checkpoint_e$epoch.jld2")
         sparsifier = M8MLSparsifier(checkpoint_path)
-        solve_dataset(val_graphs, joinpath(test_solve_output_dir, "e$epoch.csv"),
+        solve_vals, solve_times = solve_dataset(val_graphs,
                       g->solve_column_generation(get_instance(g),
                                                       pricing_filter=sparsify(get_instance(g),
                                                                               sparsifier)
                                                      ))
+	# update training history, add mean optimality criterion and speedup value
+        update!(history, Dict(
+			      "opt"=>mean((solve_vals .- default_solve_vals) ./ default_solve_vals), 
+			      "spd"=>mean((solve_times .- default_solve_times) ./ default_solve_times)
+			      ), 
+			 prefix="val")
     end
 end
 
@@ -246,7 +244,7 @@ es = Flux.early_stopping(es_metric, es_patience, min_dist=1.0f-8, init_score=1.0
 
 # start training
 train_model(model,opt,loss,train_loader,val_loader,
-                      callbacks=[TBCallback, save_model_checkpoint, solve_test_dataset],
+                      callbacks=[save_model_checkpoint,solve_test_dataset,TBCallback],
                       early_stopping=es,
                       epochs=epochs,
                       #steps_per_epoch=30,
