@@ -51,7 +51,7 @@ else
 end
 lr = 1.0e-6
 nhidden = 64
-nlayers = 4
+nlayers = 8
 tversky_beta = 0.1
 es_patience = 1000
 solve_interval = 10
@@ -136,7 +136,7 @@ function solve_dataset(graphs, solve_f)
     for (i,g) in enumerate(bar)
         _,ss = solve_f(g)
         push!(objective_values, ss["objective_value"])
-        push!(solve_times, ss["solve_time"]
+        push!(solve_times, ss["solve_time"])
     end
     return objective_values, solve_times
 end
@@ -211,15 +211,15 @@ function solve_test_dataset(epoch, history)
         # create a directory for this epochs test solve outputs for K=0
      	checkpoint_path = joinpath(save_path, "checkpoint_e$epoch.jld2")
         sparsifier = M8MLSparsifier(checkpoint_path)
-        solve_vals, solve_times = solve_dataset(val_graphs, joinpath(test_solve_output_dir, "e$epoch.csv"),
+        solve_vals, solve_times = solve_dataset(val_graphs,
                       g->solve_column_generation(get_instance(g),
                                                       pricing_filter=sparsify(get_instance(g),
                                                                               sparsifier)
                                                      ))
 	# update training history, add mean optimality criterion and speedup value
         update!(history, Dict(
-			      "opt"=>1mean((default_solve_vals .- solve_vals) ./ default_solve_vals), 
-			      "spd"=>mean(spd)
+			      "opt"=>mean((default_solve_vals .- solve_vals) ./ default_solve_vals), 
+			      "spd"=>mean((solve_times .- default_solve_times) ./ default_solve_times)
 			      ), 
 			 prefix="val")
     end
