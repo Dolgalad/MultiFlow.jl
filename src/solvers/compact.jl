@@ -263,6 +263,12 @@ function solve_compact(pb::MCF;
     optimize!(model)
     tstatus = termination_status(model)
     stats = SolverStatistics()
+    if !isnothing(filter)
+        stats["graph_reduction"] = 100 * sum(filter .== 0) / prod(size(filter))
+    else
+        stats["graph_reduction"] = 0.0
+    end
+
 
     if tstatus==OPTIMAL
         add_JuMP_statistics(stats, model)
