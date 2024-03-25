@@ -1,4 +1,4 @@
-"""Train M8ClassifierModel
+"""Train M9ClassifierModel
 Arguments : 
     - train dataset path
     - test dataset path
@@ -11,6 +11,7 @@ ENV["GKSwstype"] = "nul"
 using MultiFlows, MultiFlows.ML
 using ProgressBars
 using Plots
+using GraphPlot
 using GraphNeuralNetworks, Graphs, Flux, CUDA, Statistics, MLUtils
 using Flux: DataLoader
 using Flux.Losses: logitbinarycrossentropy, binary_focal_loss, mean, logsoftmax
@@ -57,7 +58,7 @@ es_patience = 1000
 solve_interval = 10
 _reverse = false
 
-model_name_prefix = "model8"
+model_name_prefix = "model9"
 
 #if length(ARGS)>=1
 #    dataset_path = joinpath(ARGS[1], "train")
@@ -117,8 +118,19 @@ println("\ttest solve output directory = ", test_solve_output_dir)
 
 print("Loading dataset...")
 # TODO: not enough memory on my machine for whole dataset
-all_graphs = load_dataset(dataset_path, transform_f=aggregate_demand_labels, show_progress=true, max_n=1000)
-#all_graphs = map(aggregate_demand_labels, all_graphs)
+function transform(d)
+    d = aggregate_demand_labels(d)
+    # add node features
+    S,T = edge_index(d.g)
+    gg = SimpleDiGraph(Edge.([(s,t) for (s,t) in zip(S[d.g.edata.mask], T[d.g.edata.mask])]))
+    pos_x, pos_y = spring_layout(gg)
+    nf = zeros(Float32, 2, nv(d.g))
+    nf[1,d.g.ndata.mask] .= pos_x
+    nf[2,d.g.ndata.mask] .= pos_y
+    ng = GNNGraph(d.g, ndata=(; d.g.ndata..., x=nf))
+    return AugmentedGNNGraph(ng)
+end
+all_graphs = load_dataset(dataset_path, transform_f=transform, show_progress=true, max_n=1000)
 
 nnodes = sum(all_graphs[1].g.ndata.mask)
 println("nnodes : ", nnodes)
@@ -144,7 +156,7 @@ function solve_dataset(graphs, solve_f)
 end
 
 # model
-model = M8ClassifierModel(nhidden, 3, nlayers, nnodes, reverse=_reverse) |> device
+model = M9ClassifierModel(2, 3, nhidden, nlayers, reverse=_reverse) |> device
 
 # optimizer
 opt = Flux.Optimise.Optimiser(ClipNorm(1.0), Adam(bs* lr))
@@ -153,7 +165,7 @@ opt = Flux.Optimise.Optimiser(ClipNorm(1.0), Adam(bs* lr))
 pb = get_instance(val_graphs[1])
 solve_column_generation(pb)
 solve_column_generation(pb, pricing_filter=ones(Bool, ne(pb), nk(pb)))
-sprs = M8MLSparsifier(device(model))
+sprs = M9MLSparsifier(device(model))
 solve_column_generation(pb, pricing_filter=sparsify(pb, sprs))
 
 # solve the instances in the validation set
@@ -212,7 +224,7 @@ function solve_test_dataset(epoch, history)
         println("Testing solving validation set")
         # create a directory for this epochs test solve outputs for K=0
      	checkpoint_path = joinpath(save_path, "checkpoint_e$epoch.jld2")
-        sparsifier = M8MLSparsifier(checkpoint_path)
+        sparsifier = M9MLSparsifier(checkpoint_path)
         solve_vals, solve_times = solve_dataset(val_graphs,
                       g->solve_column_generation(get_instance(g),
                                                       pricing_filter=sparsify(get_instance(g),

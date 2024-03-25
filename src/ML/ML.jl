@@ -14,6 +14,7 @@ using JLD2
 using ChainRules, ChainRulesCore
 using Statistics
 using Plots
+using GraphPlot
 using LinearAlgebra
 using SimpleWeightedGraphs
 
@@ -60,7 +61,10 @@ export augmented_graph,
        compute_graph_embeddings,
        # ML sparsifier
        m8_post_processing,
-       M8MLSparsifier
+       M8MLSparsifier,
+       # M9ClassifierModel
+       M9ClassifierModel,
+       M9MLSparsifier
 
 
 # Machine learning
@@ -77,5 +81,7 @@ include("./dataset.jl")
 include("./layer_utils.jl")
 include("./model8_definition.jl")
 include("./model8_sparsify.jl")
+include("./model9_definition.jl")
+include("./model9_sparsify.jl")
 
 end # module

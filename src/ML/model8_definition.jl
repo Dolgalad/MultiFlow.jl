@@ -2,6 +2,7 @@
 Current best version of the arc-demand classifier model.
 """
 
+abstract type AbstractClassifierModel end
 
 """
     M8MPLayer
@@ -91,7 +92,7 @@ end
 
 Classifier model.
 """
-struct M8ClassifierModel
+struct M8ClassifierModel <: AbstractClassifierModel
     node_embeddings::Flux.Embedding
     edge_encoder::Flux.Chain
     demand_encoder::Flux.Chain
